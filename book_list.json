@@ -1,342 +1,278 @@
 {
-  "ECCE Kachi": [],
   "Grade 1": [
     {
       "id": "139",
-      "title": "\ud83d\udcd6EnglishEnglish Book II                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=139"
+      "title": "English Book I"
     },
     {
       "id": "39",
-      "title": "\ud83d\udcd6EnglishGeneral Knowledge II                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=39"
+      "title": "General Knowledge I"
     },
     {
       "id": "40",
-      "title": "\ud83d\udcd6EnglishMath II                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=40"
+      "title": "Math I"
     }
   ],
   "Grade 2": [
     {
       "id": "104",
-      "title": "\ud83d\udcd6EnglishGeneral Knowledge IIII                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=104"
+      "title": "General Knowledge II"
     },
     {
       "id": "86",
-      "title": "\ud83d\udcd6EnglishMath IIII                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=86"
+      "title": "Math II"
     },
     {
       "id": "140",
-      "title": "\ud83d\udcd6EnglishMy English IIII                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=140"
+      "title": "My English II"
     }
   ],
   "Grade 3": [
     {
       "id": "113",
-      "title": "\ud83d\udcd6EnglishGeneral Knowledge IIIIII                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=113"
+      "title": "General Knowledge III"
     },
     {
       "id": "256",
-      "title": "\ud83d\udcd6EnglishIslamiyat IIIIII                        \u2022 2025-26",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=256"
+      "title": "Islamiyat III"
     },
     {
       "id": "85",
-      "title": "\ud83d\udcd6EnglishMath IIIIII                        \u2022 2024-25",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=85"
+      "title": "Math III"
     },
     {
       "id": "141",
-      "title": "\ud83d\udcd6EnglishMy English IIIIII                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=141"
+      "title": "My English III"
     }
   ],
   "Grade 4": [
     {
       "id": "258",
-      "title": "\ud83d\udcd6EnglishIslamiyat IVIV                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=258"
+      "title": "Islamiyat IV"
     },
     {
       "id": "87",
-      "title": "\ud83d\udcd6EnglishMath IVIV                        \u2022 2024-25",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=87"
+      "title": "Math IV"
     },
     {
       "id": "142",
-      "title": "\ud83d\udcd6EnglishMy English IVIV                        \u2022 2025-26",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=142"
+      "title": "My English IV"
     },
     {
       "id": "84",
-      "title": "\ud83d\udcd6EnglishScience IVIV                        \u2022 2025-26",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=84"
+      "title": "Science IV"
     },
     {
       "id": "124",
-      "title": "\ud83d\udcd6EnglishSocial Studies IVIV                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=124"
+      "title": "Social Studies IV"
     }
   ],
   "Grade 5": [
     {
       "id": "259",
-      "title": "\ud83d\udcd6EnglishIslamiyat VV                        \u2022 2025-26",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=259"
+      "title": "Islamiyat V"
     },
     {
       "id": "95",
-      "title": "\ud83d\udcd6EnglishMath VV                        \u2022 2024-25",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=95"
+      "title": "Math V"
     },
     {
       "id": "144",
-      "title": "\ud83d\udcd6EnglishMy English VV                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=144"
+      "title": "My English V"
     },
     {
       "id": "83",
-      "title": "\ud83d\udcd6EnglishScience VV                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=83"
+      "title": "Science V"
     },
     {
       "id": "80",
-      "title": "\ud83d\udcd6EnglishSocial Studies VV                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=80"
+      "title": "Social Studies V"
     }
   ],
   "Grade 6": [
     {
       "id": "46",
-      "title": "\ud83d\udcd6EnglishArabic VIVI                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=46"
+      "title": "Arabic VI"
     },
     {
       "id": "287",
-      "title": "\ud83d\udcd6EnglishComputer Education - VIVI                        \u2022 2025-26",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=287"
+      "title": "Computer Education - VI"
     },
     {
       "id": "260",
-      "title": "\ud83d\udcd6EnglishIslamiyat VIVI                        \u2022 2023-24",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=260"
+      "title": "Islamiyat VI"
     },
     {
       "id": "96",
-      "title": "\ud83d\udcd6EnglishMath VIVI                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=96"
+      "title": "Math VI"
     },
     {
       "id": "143",
-      "title": "\ud83d\udcd6EnglishMy English VIVI                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=143"
+      "title": "My English VI"
     },
     {
       "id": "81",
-      "title": "\ud83d\udcd6EnglishSocial Studies VIVI                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=81"
+      "title": "Social Studies VI"
     }
   ],
   "Grade 7": [
     {
       "id": "53",
-      "title": "\ud83d\udcd6EnglishArabic VIIVII                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=53"
+      "title": "Arabic VII"
     },
     {
       "id": "317",
-      "title": "\ud83d\udcd6EnglishComputer EducationVII                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=317"
+      "title": "Computer Education"
     },
     {
       "id": "261",
-      "title": "\ud83d\udcd6EnglishIslamiyat VIIVII                        \u2022 2022-23",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=261"
+      "title": "Islamiyat VII"
     },
     {
       "id": "97",
-      "title": "\ud83d\udcd6EnglishMath VIIVII                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=97"
+      "title": "Math VII"
     },
     {
       "id": "145",
-      "title": "\ud83d\udcd6EnglishMy English VIIVII                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=145"
+      "title": "My English VII"
     },
     {
       "id": "114",
-      "title": "\ud83d\udcd6EnglishScience VIIVII                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=114"
+      "title": "Science VII"
     },
     {
       "id": "127",
-      "title": "\ud83d\udcd6EnglishSocial Studies VIIVII                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=127"
+      "title": "Social Studies VII"
     }
   ],
   "Grade 8": [
     {
       "id": "322",
-      "title": "\ud83d\udcd6EnglishComputer EducationVIII                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=322"
+      "title": "Computer Education"
     },
     {
       "id": "262",
-      "title": "\ud83d\udcd6EnglishIslmaiyat VIIIVIII                        \u2022 2021-22",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=262"
+      "title": "Islmaiyat VIII"
     },
     {
       "id": "283",
-      "title": "\ud83d\udcd6EnglishMath VIIIVIII                        \u2022 2024-25",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=283"
+      "title": "Math VIII"
     },
     {
       "id": "146",
-      "title": "\ud83d\udcd6EnglishMy English VIIIVIII                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=146"
+      "title": "My English VIII"
     },
     {
       "id": "123",
-      "title": "\ud83d\udcd6EnglishScience VIIIVIII                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=123"
+      "title": "Science VIII"
     },
     {
       "id": "226",
-      "title": "\ud83d\udcd6EnglishSocial Studies VIIIVIII                        \u2022 2022-23",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=226"
+      "title": "Social Studies VIII"
     }
   ],
   "Grade 9": [
     {
       "id": "117",
-      "title": "\ud83d\udcd6EnglishBiology IXIX                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=117"
+      "title": "Biology IX"
     },
     {
       "id": "195",
-      "title": "\ud83d\udcd6EnglishChemsitry IXIX                        \u2022 2022-23",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=195"
+      "title": "Chemsitry IX"
     },
     {
       "id": "121",
-      "title": "\ud83d\udcd6EnglishComputer Science IXIX                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=121"
+      "title": "Computer Science IX"
     },
     {
       "id": "267",
-      "title": "\ud83d\udcd6EnglishIslamiyat IX-XIX                        \u2022 2022-23",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=267"
+      "title": "Islamiyat IX-X"
     },
     {
       "id": "180",
-      "title": "\ud83d\udcd6EnglishMath IXIX                        \u2022 2024-25",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=180"
+      "title": "Math IX"
     },
     {
       "id": "147",
-      "title": "\ud83d\udcd6EnglishMy English IXIX                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=147"
+      "title": "My English IX"
     },
     {
       "id": "174",
-      "title": "\ud83d\udcd6EnglishPhysics IXIX                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=174"
+      "title": "Physics IX"
     },
     {
       "id": "247",
-      "title": "\ud83d\udcd6EnglishReligious Studies IX -XIX                        \u2022 2020-21",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=247"
+      "title": "Religious Studies IX -X"
     }
   ],
   "Grade 10": [
     {
       "id": "188",
-      "title": "\ud83d\udcd6EnglishBiology XX                        \u2022 2021-22",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=188"
+      "title": "Biology X"
     },
     {
       "id": "198",
-      "title": "\ud83d\udcd6EnglishChemsitry XX                        \u2022 2022-23",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=198"
+      "title": "Chemsitry X"
     },
     {
       "id": "204",
-      "title": "\ud83d\udcd6EnglishComputer Science XX                        \u2022 2025-26",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=204"
+      "title": "Computer Science X"
     },
     {
       "id": "205",
-      "title": "\ud83d\udcd6EnglishMath XX                        \u2022 2024-25",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=205"
+      "title": "Math X"
     },
     {
       "id": "235",
-      "title": "\ud83d\udcd6EnglishPak Studies XX                        \u2022 2023-24",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=235"
+      "title": "Pak Studies X"
     },
     {
       "id": "202",
-      "title": "\ud83d\udcd6EnglishPhysics XX                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=202"
+      "title": "Physics X"
     },
     {
       "id": "201",
-      "title": "\ud83d\udcd6EnglishSecondary Stage English XX                        \u2022 2026",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=201"
+      "title": "Secondary Stage English X"
     }
   ],
   "Grade 11": [
     {
       "id": "219",
-      "title": "\ud83d\udcd6EnglishBiology XIXI                        \u2022 2023-24",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=219"
+      "title": "Biology XI"
     },
     {
       "id": "206",
-      "title": "\ud83d\udcd6EnglishChemistry XIXI                        \u2022 2022-23",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=206"
+      "title": "Chemistry XI"
     },
     {
       "id": "203",
-      "title": "\ud83d\udcd6EnglishEnglish XIXI                        \u2022 2022-23",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=203"
+      "title": "English XI"
     },
     {
       "id": "207",
-      "title": "\ud83d\udcd6EnglishMath XIXI                        \u2022 2024-25",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=207"
+      "title": "Math XI"
     },
     {
       "id": "221",
-      "title": "\ud83d\udcd6EnglishPhysics XIXI                        \u2022 2025-26",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=221"
+      "title": "Physics XI"
     }
   ],
   "Grade 12": [
     {
       "id": "228",
-      "title": "\ud83d\udcd6EnglishBiology XIIXII                        \u2022 2023-24",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=228"
+      "title": "Biology XII"
     },
     {
       "id": "218",
-      "title": "\ud83d\udcd6EnglishChemistry XIIXII                        \u2022 2023-24",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=218"
+      "title": "Chemistry XII"
     },
     {
       "id": "225",
-      "title": "\ud83d\udcd6EnglishMath XIIXII                        \u2022 2024-25",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=225"
+      "title": "Math XII"
     },
     {
       "id": "215",
-      "title": "\ud83d\udcd6EnglishPhysics XIIXII                        \u2022 2025-26",
-      "url": "https://portal.stbb.edu.pk/ebooks/book.php?id=215"
+      "title": "Physics XII"
     }
   ]
 }
