@@ -264,21 +264,21 @@ def detect_chapters(pdf_path):
 
 
 def flatten_pdf(input_pdf, output_pdf, start_page, end_page):
-    """Flatten PDF pages to JPEG and reassemble using pure Python"""
+    """Flatten PDF pages to grayscale JPEG and reassemble using pure Python"""
     temp_dir = output_pdf + "_temp"
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir)
     
     try:
-        # Convert pages to JPEG
         cmd = [
             "pdftoppm",
             "-f", str(start_page),
             "-l", str(end_page),
             "-jpeg",
-            "-jpegopt", "quality=85",
-            "-r", "150",
+            "-jpegopt", "quality=80",
+            "-r", "120",
+            "-gray",
             input_pdf,
             os.path.join(temp_dir, "page")
         ]
@@ -297,7 +297,6 @@ def flatten_pdf(input_pdf, output_pdf, start_page, end_page):
             log("  No images generated")
             return False
         
-        # Use pure Python JPEG-to-PDF converter
         jpegs_to_pdf(images, output_pdf)
         
         size_kb = os.path.getsize(output_pdf) // 1024
@@ -377,15 +376,43 @@ def process_book(book_id, raw_title, class_name):
             log(f"  Cleaned up raw PDF")
 
 
-def git_commit_and_push(message):
-    """Commit and push changes"""
+def git_commit(message):
+    """Commit changes locally"""
     try:
+        subprocess.run(["git", "config", "http.postBuffer", "524288000"], check=True, capture_output=True)
         subprocess.run(["git", "add", "-A"], check=True, capture_output=True, text=True)
         subprocess.run(["git", "commit", "-m", message], check=True, capture_output=True, text=True)
-        subprocess.run(["git", "push"], check=True, capture_output=True, text=True)
-        log(f"  Git: {message}")
+        log(f"  Git committed: {message}")
+        return True
     except subprocess.CalledProcessError as e:
-        log(f"  Git error: {e.stderr[:200] if e.stderr else str(e)}")
+        log(f"  Git commit error: {e.stderr[:200] if e.stderr else str(e)}")
+        return False
+
+
+def git_push_with_retry(max_retries=3):
+    """Push with retry logic"""
+    for attempt in range(max_retries):
+        try:
+            subprocess.run(["git", "push"], check=True, capture_output=True, text=True, timeout=120)
+            log(f"  Git push succeeded on attempt {attempt + 1}")
+            return True
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr[:300] if e.stderr else str(e)
+            log(f"  Git push attempt {attempt + 1} failed: {error_msg}")
+            if attempt < max_retries - 1:
+                wait = 10 * (attempt + 1)
+                log(f"  Waiting {wait}s before retry...")
+                time.sleep(wait)
+            else:
+                log(f"  Git push failed after {max_retries} attempts")
+                return False
+        except Exception as e:
+            log(f"  Git push error: {str(e)[:200]}")
+            if attempt < max_retries - 1:
+                time.sleep(10 * (attempt + 1))
+            else:
+                return False
+    return False
 
 
 def main():
@@ -412,6 +439,7 @@ def main():
     failed = 0
     
     for class_name, books in all_books.items():
+        grade_committed = False
         for book in books:
             if book["id"] in processed_ids:
                 done += 1
@@ -428,7 +456,8 @@ def main():
                 
                 # Commit after each book
                 subject = extract_subject_from_title(raw_title)
-                git_commit_and_push(f"Add {class_name} {subject} chapters")
+                git_commit(f"Add {class_name} {subject} chapters")
+                grade_committed = True
                 
             except Exception as e:
                 log(f"FAILED: {raw_title} - {e}")
@@ -442,7 +471,12 @@ def main():
                 failed += 1
             
             log(f"Progress: {done}/{total_books} done, {failed} failed")
-            time.sleep(2)
+            time.sleep(1)
+        
+        # Push after each grade
+        if grade_committed:
+            log(f"  Pushing {class_name} changes...")
+            git_push_with_retry()
     
     log("\n" + "="*60)
     log("PROCESSING COMPLETE")
