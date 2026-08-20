@@ -1,11 +1,10 @@
 # STBB eBooks Processing - README
 
 ## Current Status
-- Old Physics PDFs are RESTORED and SAFE in the repo
 - New chapter-organized PDFs are being created alongside them
 - Script is ready but NOT running (needs manual execution)
 
-## Files Ready
+## Files Ready (remove batch scirpts then update readme)
 - `stbb_one.py` - Main processor script
 - `jpegs_to_pdf.py` - Pure-Python PDF builder
 - `start_processing.sh` - Easy start script
@@ -14,53 +13,29 @@
 
 ## How to Start (YOU MUST RUN THIS)
 
-### Option 1: Direct Python
-```bash
-cd /workspace/4fba1b35-c093-4694-aa80-9a73b48e2a0f/sessions/agent_fb1dc3f1-092e-4f66-aa62-7dbf088f2b51
-python3 stbb_one.py
-```
-
-### Option 2: Bash Script
-```bash
-cd /workspace/4fba1b35-c093-4694-aa80-9a73b48e2a0f/sessions/agent_fb1dc3f1-092e-4f66-aa62-7dbf088f2b51
-chmod +x start_processing.sh
-./start_processing.sh
-```
-
 ## What the Script Does
-1. Downloads one PDF at a time from STBB website
-2. Inspects every page to find Unit/Chapter markers
-3. Splits into chapters using pdftoppm (grayscale, 120 DPI, quality 80)
-4. Creates non-OCR flattened PDFs
-5. Verifies each chapter file
-6. Commits to git after each book
-7. Pushes each grade to GitHub with automatic retries
-8. Deletes raw PDFs after processing
-9. NEVER touches old Physics PDFs
+1. Downloads one PDF at a time from STBB website(if mulit agent then assign each grade to each agent to process one book at time manully not blind scipit that gets stuck and skips chapters miss 
+   https://ebooks.stbb.edu.pk/?medium=English (only english curriculum books)
+3. Inspects every page to find Unit/Chapter markers
+4. Splits into chapters using any fastest solution you find (grayscale, 120 DPI, quality 80)
+   try not to use convert jpg then into pdf it is time consuming find faster way to faltten and just remove ocr text 
+6. Creates non-OCR flattened PDFs
+7. Verifies each chapter file
+8. Commits to git after each book
+9. Pushes each grade to GitHub with automatic retries
+10. Deletes raw PDFs after processing
+11. NEVER touches old Physics PDFs
 
 ## If Git Push Fails (HTTP 413/502)
 The old Physics PDFs are large and may cause push failures. If this happens:
 
-### Temporary Solution:
-```bash
-# Move old Physics PDFs out temporarily
-mkdir -p /tmp/old_physics
-mv Grade\ 9/Physics\ Grade\ 9* /tmp/old_physics/
-mv Grade\ 10/Physics\ Grade\ 10* /tmp/old_physics/
-mv Grade\ 11/Physics\ Grade\ 11* /tmp/old_physics/
-mv Grade\ 12/Physics\ Grade\ 12* /tmp/old_physics/
 
 # Push new chapters
 git add -A
 git commit -m "Add new chapters"
 git push
 
-# Restore old Physics PDFs
-mv /tmp/old_physics/* .
-git add -A
-git commit -m "Restore old Physics PDFs"
-git push
-```
+
 
 ## Progress Tracking
 - `progress.json` - Contains list of processed book IDs
@@ -71,16 +46,12 @@ git push
 - Some chapter titles may be generic ("Unit 2") due to PDF text extraction limits
 - Git push may fail due to large file sizes (retry logic handles this)
 - Some books may have unusual chapter structures
+- dont use unattended scripts they some time get stuck stops try to use some sort of loop or way to keep checking progress of process manully instead of blind script
+- remove batch process scripts dont use them
 
 ## Time Estimate
 - ~5-10 minutes per book (download + processing + push)
 - 63 books total = ~5-10 hours
-- Script runs unattended once started
 
 ## Monitoring
-Check progress with:
-```bash
-tail -f process.log  # If running in background
-cat progress.json    # See what's done
-ls -la Grade*/       # See created chapters
-```
+Check progress
