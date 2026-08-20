@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""STBB eBooks Processor - Pure stdlib, no pip dependencies"""
+"""STBB Single-Book Processor - one PDF at a time, grayscale non-OCR, with retries"""
 
 import os
 import re
@@ -37,11 +37,6 @@ PROGRESS_FILE = os.path.join(WORKSPACE, "progress.json")
 
 def log(msg):
     print(msg, flush=True)
-
-
-def get_session():
-    """Use urllib with headers"""
-    return None  # We'll use urllib directly
 
 
 def sanitize(name):
@@ -88,21 +83,15 @@ def fetch_class_books(class_id):
     books = []
     seen = set()
     
-    # Find all book.php?id=NNN links
     for match in re.finditer(r'href="(https://portal\.stbb\.edu\.pk/ebooks/book\.php\?id=(\d+))"', html):
-        href = match.group(1)
         book_id = match.group(2)
         if book_id in seen:
             continue
         seen.add(book_id)
         
-        # Find the book-title div within 2000 chars after the link
         section = html[match.start():match.start()+2000]
         title_match = re.search(r'<div[^>]*class="book-title"[^>]*>([^<]+)</div>', section)
-        if title_match:
-            title = title_match.group(1).strip()
-        else:
-            title = f"Book {book_id}"
+        title = title_match.group(1).strip() if title_match else f"Book {book_id}"
         
         books.append({"id": book_id, "title": title})
     
@@ -190,7 +179,6 @@ def detect_chapters(pdf_path):
         if m:
             unit_pages.append((i, m.group(1).strip(), 'title'))
     
-    # Deduplicate and assign sequential numbers
     chapters = []
     seen_pages = set()
     seen_nums = set()
@@ -209,7 +197,6 @@ def detect_chapters(pdf_path):
             seq += 1
             chapters.append({'num': seq, 'page': p, 'title': num_or_title})
     
-    # Extract titles and validate
     valid_chapters = []
     for ch in chapters:
         txt = extract_text_page(pdf_path, ch['page'])
@@ -238,7 +225,6 @@ def detect_chapters(pdf_path):
             break
         ch['title'] = ' '.join(title_parts).strip() if title_parts else f'Unit {ch["num"]}'
         
-        # Validate: reject false positives
         if re.match(r'^(ensuring|Follow the|While teaching|Note for|Encourage students)\b', ch['title'], re.IGNORECASE):
             continue
         if len(ch['title']) < 3:
@@ -246,18 +232,14 @@ def detect_chapters(pdf_path):
         valid_chapters.append(ch)
     
     chapters = valid_chapters
-    
-    # Recalculate sequential numbers after filtering
     for i, ch in enumerate(chapters):
         ch['num'] = i + 1
     
-    # Calculate ranges
     for i in range(len(chapters) - 1):
         chapters[i]['end'] = chapters[i + 1]['page'] - 1
     if chapters:
         chapters[-1]['end'] = total
     
-    # Filter tiny chapters
     chapters = [c for c in chapters if (c['end'] - c['page'] + 1) >= 2]
     
     return chapters
@@ -317,7 +299,6 @@ def process_book(book_id, raw_title, class_name):
     raw_path = os.path.join(raw_dir, f"{sanitize(raw_title)}.pdf")
     
     try:
-        # Download
         url = f"{BASE_URL}/ebooks/pdf_proxy.php?id={book_id}&download=1"
         log(f"  Downloading from {url}")
         url_open_stream(url, raw_path)
@@ -325,7 +306,6 @@ def process_book(book_id, raw_title, class_name):
         size_mb = os.path.getsize(raw_path) // (1024 * 1024)
         log(f"  Downloaded: {total_pages} pages, {size_mb}MB")
         
-        # Detect chapters
         chapters = detect_chapters(raw_path)
         log(f"  Detected {len(chapters)} chapters")
         for ch in chapters:
@@ -340,7 +320,6 @@ def process_book(book_id, raw_title, class_name):
             flatten_pdf(raw_path, filepath, 1, total_pages)
             return [filepath]
         
-        # Split and flatten each chapter
         output_dir = os.path.join(WORKSPACE, sanitize(class_name), sanitize(subject))
         os.makedirs(output_dir, exist_ok=True)
         
@@ -370,7 +349,6 @@ def process_book(book_id, raw_title, class_name):
         log(f"  ERROR: {e}")
         raise
     finally:
-        # Clean up raw PDF
         if os.path.exists(raw_path):
             os.remove(raw_path)
             log(f"  Cleaned up raw PDF")
@@ -417,19 +395,17 @@ def git_push_with_retry(max_retries=3):
 
 def main():
     log("="*60)
-    log("STBB eBooks Processor Started")
+    log("STBB Single-Book Processor Started")
     log("="*60)
     
     progress = load_progress()
     
-    # First collect all books
     all_books = {}
     for cls in CLASSES:
         books = fetch_class_books(cls["id"])
         all_books[cls["name"]] = books
         time.sleep(1)
     
-    # Save book list
     with open(os.path.join(WORKSPACE, "book_list.json"), "w") as f:
         json.dump(all_books, f, indent=2)
     
@@ -454,7 +430,6 @@ def main():
                 save_progress(progress)
                 done += 1
                 
-                # Commit after each book
                 subject = extract_subject_from_title(raw_title)
                 git_commit(f"Add {class_name} {subject} chapters")
                 grade_committed = True
@@ -473,7 +448,6 @@ def main():
             log(f"Progress: {done}/{total_books} done, {failed} failed")
             time.sleep(1)
         
-        # Push after each grade
         if grade_committed:
             log(f"  Pushing {class_name} changes...")
             git_push_with_retry()
