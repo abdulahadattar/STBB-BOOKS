@@ -2,23 +2,34 @@
 
 ## Current Status
 - New chapter-organized PDFs are being created alongside them
-- Script is ready but NOT running (needs manual execution)
+- Script is ready but needs manual execution
 
-## Files Ready (remove batch scirpts then update readme)
-- `stbb_one.py` - Main processor script
+## Files Ready
+- `stbb_one.py` - Main processor script (supports `--grades` to filter grades)
 - `jpegs_to_pdf.py` - Pure-Python PDF builder
 - `start_processing.sh` - Easy start script
 - `progress.json` - Tracks which books are done
 - `book_list.json` - List of all books to process
+- `GRADES.md` - Detailed grade-by-grade tracking
 
-## How to Start (YOU MUST RUN THIS)
+## How to Start
+
+### Process all grades
+```bash
+python3 stbb_one.py
+```
+
+### Process specific grades only (e.g., grades 9-12)
+```bash
+python3 stbb_one.py --grades "Grade 9" "Grade 10" "Grade 11" "Grade 12"
+```
 
 ## What the Script Does
-1. Downloads one PDF at a time from STBB website(if mulit agent then assign each grade to each agent to process one book at time manully not blind scipit that gets stuck and skips chapters miss 
+1. Downloads one PDF at a time from STBB website
    https://ebooks.stbb.edu.pk/?medium=English (only english curriculum books)
 3. Inspects every page to find Unit/Chapter markers
 4. Splits into chapters using any fastest solution you find (grayscale, 120 DPI, quality 80)
-   try not to use convert jpg then into pdf it is time consuming find faster way to faltten and just remove ocr text 
+   try not to use convert jpg then into pdf it is time consuming find faster way to faltten and just remove ocr text
 6. Creates non-OCR flattened PDFs
 7. Verifies each chapter file
 8. Commits to git after each book
@@ -29,18 +40,32 @@
 ## If Git Push Fails (HTTP 413/502)
 The old Physics PDFs are large and may cause push failures. If this happens:
 
-
-# Push new chapters
+```bash
 git add -A
 git commit -m "Add new chapters"
 git push
-
-
+```
 
 ## Progress Tracking
 - `progress.json` - Contains list of processed book IDs
 - Script automatically skips already-processed books
 - If interrupted, just re-run the script
+
+## Grade Progress
+| Grade | Total | Done | Failed | Pending | Status |
+|-------|-------|------|--------|---------|--------|
+| Grade 1 | 3 | 3 | 0 | 0 | ✅ Complete |
+| Grade 10 | 7 | 1 | 0 | 6 | 🔄 Partial |
+| Grade 11 | 5 | 0 | 0 | 5 | ⬜ Not started |
+| Grade 12 | 4 | 0 | 0 | 4 | ⬜ Not started |
+| Grade 2 | 3 | 3 | 0 | 0 | ✅ Complete |
+| Grade 3 | 4 | 3 | 1 | 0 | 🔄 Partial |
+| Grade 4 | 5 | 5 | 0 | 0 | ✅ Complete |
+| Grade 5 | 5 | 5 | 0 | 0 | ✅ Complete |
+| Grade 6 | 6 | 3 | 0 | 3 | 🔄 Partial |
+| Grade 7 | 7 | 0 | 0 | 7 | ⬜ Not started |
+| Grade 8 | 6 | 0 | 0 | 6 | ⬜ Not started |
+| Grade 9 | 8 | 0 | 0 | 8 | ⬜ Not started |
 
 ## Known Issues
 - Some chapter titles may be generic ("Unit 2") due to PDF text extraction limits
@@ -54,4 +79,6 @@ git push
 - 63 books total = ~5-10 hours
 
 ## Monitoring
-Check progress
+Check `GRADES.md` for detailed per-grade book status.
+
+Last updated: 2026-08-20 22:20:33 UTC

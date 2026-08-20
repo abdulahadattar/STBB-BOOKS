@@ -4,3 +4,8 @@
 # Local utility scripts
 Flatten_PDFs.ps1
 /Grade 11/Flatten_PDFs.ps1
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

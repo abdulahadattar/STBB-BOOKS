@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import urllib.request
 import urllib.error
+import argparse
 from jpegs_to_pdf import jpegs_to_pdf
 
 WORKSPACE = "/workspace/4fba1b35-c093-4694-aa80-9a73b48e2a0f/sessions/agent_fb1dc3f1-092e-4f66-aa62-7dbf088f2b51"
@@ -394,14 +395,25 @@ def git_push_with_retry(max_retries=3):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="STBB Single-Book Processor")
+    parser.add_argument("--grades", nargs="+", default=None,
+                        help="Process only specific grades (e.g. --grades 'Grade 9' 'Grade 10')")
+    args = parser.parse_args()
+    
     log("="*60)
     log("STBB Single-Book Processor Started")
     log("="*60)
+    if args.grades:
+        log(f"Filtering to grades: {', '.join(args.grades)}")
     
     progress = load_progress()
     
     all_books = {}
-    for cls in CLASSES:
+    classes_to_process = CLASSES
+    if args.grades:
+        classes_to_process = [cls for cls in CLASSES if cls["name"] in args.grades]
+    
+    for cls in classes_to_process:
         books = fetch_class_books(cls["id"])
         all_books[cls["name"]] = books
         time.sleep(1)
