@@ -35,7 +35,7 @@ jobs:
           python3 -m pip install --quiet requests
       
       - name: Determine next book to process
-        id: pick-book
+        id: pick_book
         run: |
           python3 -c "
           import json, sys
@@ -69,7 +69,7 @@ jobs:
           "
       
       - name: No books left
-        if: steps.pick-book.outputs.result == 'NONE'
+        if: steps.pick_book.outputs.result == 'NONE'
         run: |
           echo "All books processed!"
           exit 0
@@ -77,7 +77,7 @@ jobs:
       - name: Download raw PDF
         id: download
         env:
-          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
+          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
         run: |
           mkdir -p _raw
           curl -s -L "https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=${BOOK_ID}&download=1" \
@@ -91,10 +91,10 @@ jobs:
       - name: Process book into chapters
         id: process
         env:
-          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
-          BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
-          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
-          SUBJECT: ${{ steps.pick-book.outputs.result.split('|')[3] }}
+          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
+          BOOK_TITLE: ${{ steps.pick_book.outputs.result.split('|')[1] }}
+          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
+          SUBJECT: ${{ steps.pick_book.outputs.result.split('|')[3] }}
         run: |
           python3 process_one_book.py \
             "$BOOK_ID" \
@@ -105,8 +105,8 @@ jobs:
       - name: Verify chapter PDFs
         id: verify
         env:
-          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
-          SUBJECT: ${{ steps.pick-book.outputs.result.split('|')[3] }}
+          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
+          SUBJECT: ${{ steps.pick_book.outputs.result.split('|')[3] }}
         run: |
           set -e
           DIR="Grade $GRADE/$SUBJECT"
@@ -124,9 +124,9 @@ jobs:
       
       - name: Commit and push chapters
         env:
-          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
-          BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
-          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
+          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
+          BOOK_TITLE: ${{ steps.pick_book.outputs.result.split('|')[1] }}
+          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
         run: |
           git config user.email "kilo@example.com"
           git config user.name "Kilo Agent"
@@ -137,7 +137,7 @@ jobs:
       
       - name: Update progress.json
         env:
-          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
+          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
         run: |
           python3 -c "
           import json
@@ -155,9 +155,9 @@ jobs:
       - name: Trigger next book
         if: success()
         env:
-          BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
-          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
-          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
+          BOOK_TITLE: ${{ steps.pick_book.outputs.result.split('|')[1] }}
+          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
+          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
         run: |
           echo "✅ Completed $GRADE $BOOK_TITLE"
           curl -s -X POST \
@@ -170,9 +170,9 @@ jobs:
       - name: Document blocker
         if: failure()
         env:
-          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
-          BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
-          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
+          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
+          BOOK_TITLE: ${{ steps.pick_book.outputs.result.split('|')[1] }}
+          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
         run: |
           echo "🛑 BLOCKED: $GRADE $BOOK_TITLE (ID: $BOOK_ID)"
           echo "See workflow run logs for details"
