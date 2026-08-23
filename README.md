@@ -1,57 +1,100 @@
-# STBB eBooks Processing - README
+# STBB eBooks Processing - Manual Workflow
 
-## Current Status
-- New chapter-organized PDFs are being created alongside them
-- Script is ready but NOT running (needs manual execution)
+## Current Status (as of August 2025)
 
-## Files Ready (remove batch scirpts then update readme)
-- `stbb_one.py` - Main processor script
-- `jpegs_to_pdf.py` - Pure-Python PDF builder
-- `start_processing.sh` - Easy start script
-- `progress.json` - Tracks which books are done
-- `book_list.json` - List of all books to process
+**Done (Grades 1–6):** 22 books processed — chapter-organized PDFs in `Grade 1/` through `Grade 6/`.
 
-## How to Start (YOU MUST RUN THIS)
+**Priority: Grades 9–12** — these are the books to process next (from `book_list.json`):
+- **Grade 9**: Biology (117), Chemistry (195), Computer Science (121), Islamiyat 9-10 (267), Math (180), English (147), Physics (174), Religious Studies 9-10 (247)
+- **Grade 10**: Biology (188), Chemistry (198), Computer Science (204), Math (205), Pakistan Studies (235), Physics (202), English (201)
+- **Grade 11**: Biology (219), Chemistry (206), English (203), Math (207), Physics (221)
+- **Grade 12**: Biology (228), Chemistry (218), Math (225), Physics (215)
 
-## What the Script Does
-1. Downloads one PDF at a time from STBB website(if mulit agent then assign each grade to each agent to process one book at time manully not blind scipit that gets stuck and skips chapters miss 
-   https://ebooks.stbb.edu.pk/?medium=English (only english curriculum books)
-3. Inspects every page to find Unit/Chapter markers
-4. Splits into chapters using any fastest solution you find (grayscale, 120 DPI, quality 80)
-   try not to use convert jpg then into pdf it is time consuming find faster way to faltten and just remove ocr text 
-6. Creates non-OCR flattened PDFs
-7. Verifies each chapter file
-8. Commits to git after each book
-9. Pushes each grade to GitHub with automatic retries
-10. Deletes raw PDFs after processing
-11. NEVER touches old Physics PDFs
+**Preserved (do not touch):** `Grade 9/Physics/` and `Grade 10/Physics/` — old full-book PDFs already exist.
 
-## If Git Push Fails (HTTP 413/502)
-The old Physics PDFs are large and may cause push failures. If this happens:
+## Manual Workflow (One Book at a Time)
 
+### 1. Download the raw full-book PDF
+```bash
+# From STBB portal (English medium only):
+# https://ebooks.stbb.edu.pk/?medium=English
+# Click the book → download the complete PDF
+```
 
-# Push new chapters
-git add -A
-git commit -m "Add new chapters"
+### 2. Inspect & split into chapters
+```bash
+# Option A: Use pdftoppm (fast, no OCR, grayscale 120 DPI)
+pdftoppm -gray -r 120 input.pdf output_prefix
+
+# Option B: Use pdfimages if already image-based
+pdfimages -j input.pdf output_prefix
+```
+
+### 3. Find Unit/Chapter boundaries
+- Open the generated images/pages
+- Note page numbers where each Unit/Chapter starts
+- Create a mapping: `Unit 1 → pages 1-15`, `Unit 2 → pages 16-30`, etc.
+
+### 4. Flatten each chapter (fast path)
+```bash
+# For each chapter range, extract pages → JPEG → flatten to non-OCR PDF
+# Example using pdftoppm + jpegs_to_pdf.py (pure Python, no deps):
+pdftoppm -gray -r 120 -f START_PAGE -l END_PAGE input.pdf chapter_X
+python jpegs_to_pdf.py chapter_X-*.jpg "Grade N/Subject/Chapter XX - Unit Y.pdf"
+```
+
+### 5. Verify
+- Open each output PDF → confirm correct pages, readable, no corruption
+- Check file size is reasonable (1-10 MB typical)
+
+### 6. Commit & push
+```bash
+git add "Grade N/Subject/Chapter XX - Unit Y.pdf"
+git commit -m "Add Grade N Subject: Chapter XX - Unit Y"
 git push
+```
+**One book = one commit.** Push after each book completes.
 
+### 7. Update progress.json
+Add the book ID to the `processed` array.
 
+### 8. Clean up local raw PDF & temp files
+```bash
+rm input.pdf chapter_X-*.jpg
+```
 
-## Progress Tracking
-- `progress.json` - Contains list of processed book IDs
-- Script automatically skips already-processed books
-- If interrupted, just re-run the script
+## Hard Rules
+- **One book at a time** — never parallel/automated batch scripts (they skip chapters and hang)
+- **English medium only** — filter `?medium=English` on the portal
+- **Never touch old Physics PDFs** in `Grade 9/Physics/` and `Grade 10/Physics/`
+- **Commit after every book** — atomic, verifiable history
+- **Delete raw PDFs after processing** — don't commit them
 
-## Known Issues
-- Some chapter titles may be generic ("Unit 2") due to PDF text extraction limits
-- Git push may fail due to large file sizes (retry logic handles this)
-- Some books may have unusual chapter structures
-- dont use unattended scripts they some time get stuck stops try to use some sort of loop or way to keep checking progress of process manully instead of blind script
-- remove batch process scripts dont use them
+## Tools in this repo
+- `jpegs_to_pdf.py` — pure Python JPEG → PDF (no external deps)
+- `book_list.json` — master list of all books by grade
+- `progress.json` — tracks processed book IDs
 
-## Time Estimate
-- ~5-10 minutes per book (download + processing + push)
-- 63 books total = ~5-10 hours
+## Why no automation?
+Previous scripts (`stbb_*.py`, `start_processing.sh`) would:
+- Hang indefinitely on downloads
+- Skip chapters without detection
+- Produce corrupted PDFs
+- Fill disk with raw PDFs
+- Fail git pushes silently
 
-## Monitoring
-Check progress
+**Manual = verified, every chapter, every time.**
+
+## For Kilo Cloud Agent (webhook sessions)
+Use **sparse checkout** to avoid downloading all PDFs:
+```bash
+git clone --filter=blob:none --sparse https://github.com/abdulahadattar/STBB-BOOKS.git
+cd STBB-BOOKS
+git sparse-checkout init --cone
+git sparse-checkout set .
+# Process one book...
+git sparse-checkout add "Grade 10/Biology"
+# Add new chapters...
+git commit && git push
+git sparse-checkout remove "Grade 10/Biology"
+```
