@@ -1,104 +1,214 @@
-# STBB eBooks Processing - Manual Workflow
+# STBB eBooks Processing — Self-Healing Webhook Workflow
 
-## Current Status (as of August 2025)
+## How It Works
 
-**Done (Grades 1–6):** 22 books processed — chapter-organized PDFs in `Grade 1/` through `Grade 6/`.
-Must be veirfied are properly chapter wise broken and flattened (non ocred)
-**Priority: Grades 9–12** — these are the books to process next (from `book_list.json`):
-- **Grade 9**: Biology (117), Chemistry (195), Computer Science (121), Islamiyat 9-10 (267), Math (180), English (147), Physics (174), Religious Studies 9-10 (247)
-- **Grade 10**: Biology (188), Chemistry (198), Computer Science (204), Math (205), Pakistan Studies (235), Physics (202), English (201)
-- **Grade 11**: Biology (219), Chemistry (206), English (203), Math (207), Physics (221)
-- **Grade 12**: Biology (228), Chemistry (218), Math (225), Physics (215)
+A GitHub issue triggers a Kilo webhook session. That session downloads **one** book, splits it into chapter PDFs, verifies them, pushes them, and then triggers the next session. If anything goes wrong, it documents the exact blocker and exits — no infinite loops.
 
-**Preserved (do not touch):** `Grade 9/Physics/` and `Grade 10/Physics/` — old full-book PDFs already exist.
+---
 
-## Manual Workflow (One Book at a Time)
+## What Each Session Must Do (Step by Step)
 
-### 1. Download the raw full-book PDF
+### 1. Pick ONE book
+- Read `progress.json` → `processed` array
+- Read `book_list.json` → pick the next unprocessed book from the Grades 9–12 priority list
+- **Only one book per session. No exceptions.**
+
+### 2. Download the raw PDF
+- URL pattern: `https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=<BOOK_ID>&download=1`
+- Save to `/tmp/<book_id>.pdf`
+- Verify download: `pdfinfo /tmp/<book_id>.pdf` → must report total pages
+- If 404/rate-limited → mark `blocked:portal` in `progress.json`, open GitHub issue, **exit**
+
+### 3. Find chapter boundaries
+- Run: `pdftotext -f <page> -l <page> -layout /tmp/<book_id>.pdf -` for each page
+- Look for **either**:
+  - `Chapter N` or `Unit N` markers
+  - **OR** pages with `Time Allocation` (STBB unit info pages)
+- **Critical:** Record exact start/end page for every chapter
+- **Do NOT guess.** If boundaries are unclear → mark `blocked:split`, open issue, **exit**
+
+### 4. Split and flatten each chapter
+For each chapter page range:
 ```bash
-# From STBB portal (English medium only):
-# https://ebooks.stbb.edu.pk/?medium=English
-# Click the book → download the complete PDF
+pdftoppm -gray -r 120 -f <start> -l <end> /tmp/<book_id>.pdf chapter_prefix
+python jpegs_to_pdf.py chapter_prefix-*.jpg "Grade N/Subject/Chapter NN - <Unit Title>.pdf"
 ```
+- Output must be **non-OCR PDF**: no text layer, just images
+- `jpegs_to_pdf.py` is the approved tool — it embeds JPEGs directly, no re-encoding
+- **Do NOT use** `stbb_one.py`, `stbb_final.py`, `stbb_pure.py`, `stbb_processor.py`, `start_processing.sh` — they freeze and produce corrupt output
 
-### 2. Inspect & split into chapters
+### 5. Verify EVERY chapter PDF
 ```bash
-# Option A: Use pdftoppm (fast, no OCR, grayscale 120 DPI)
-pdftoppm -gray -r 120 input.pdf output_prefix
-
-# Option B: Use pdfimages if already image-based
-pdfimages -j input.pdf output_prefix
+pdfinfo "Grade N/Subject/Chapter NN - <Unit Title>.pdf"   # must have pages > 0
+pdftotext "Grade N/Subject/Chapter NN - <Unit Title>.pdf" - | head -5  # must be EMPTY (no OCR)
 ```
+- If `pdfinfo` fails or pages = 0 → **corrupt**, do not commit
+- If `pdftotext` returns text → **has OCR layer**, re-flatten
+- Open the PDF visually if possible — confirm it renders
+- **All chapters must verify before any commit**
 
-### 3. Find Unit/Chapter boundaries
-- Open the generated images/pages
-- Note page numbers where each Unit/Chapter starts
-- Create a mapping: `Unit 1 → pages 1-15`, `Unit 2 → pages 16-30`, etc.
-
-### 4. Flatten each chapter (fast path)
+### 6. Commit and push
 ```bash
-# For each chapter range, extract pages → JPEG → flatten to non-OCR PDF
-# Example using pdftoppm + jpegs_to_pdf.py (pure Python, no deps):
-pdftoppm -gray -r 120 -f START_PAGE -l END_PAGE input.pdf chapter_X
-python jpegs_to_pdf.py chapter_X-*.jpg "Grade N/Subject/Chapter XX - Unit Y.pdf"
+git add "Grade N/Subject/Chapter NN - <Unit Title>.pdf"
+git commit -m "Add Grade N Subject: Chapter NN - <Unit Title>"
+git pull --rebase origin main
+git push origin main
 ```
-
-### 5. Verify
-- Open each output PDF → confirm correct pages, readable, no corruption
-- Check file size is reasonable (1-10 MB typical)
-
-### 6. Commit & push
-```bash
-git add "Grade N/Subject/Chapter XX - Unit Y.pdf"
-git commit -m "Add Grade N Subject: Chapter XX - Unit Y"
-git push
-```
-**One book = one commit.** Push after each book completes.
+- One commit per chapter is ideal, but at minimum: one commit per book
+- If push fails with HTTP 413/502 → split into smaller commits, retry
+- If push fails for other reasons → mark `blocked:git`, open issue, **exit**
 
 ### 7. Update progress.json
-Add the book ID to the `processed` array.
+```json
+{
+  "processed": ["188", "198", ...],
+  "failed": [...],
+  "blocked": [...]
+}
+```
+- Append book ID to `processed`
+- Commit and push `progress.json`
 
-### 8. Clean up local raw PDF & temp files
+### 8. Clean up
 ```bash
-rm input.pdf chapter_X-*.jpg
+rm /tmp/<book_id>.pdf chapter_prefix-*.jpg
 ```
 
-## Hard Rules
-- **One book at a time** — never parallel/automated batch scripts (they skip chapters and hang)
-- **English medium only** — filter `?medium=English` on the stbb portal
-- **Commit after every book** — atomic, verifiable history
-- **Delete raw PDFs after processing** — don't commit them
-- always keep improving updating if any script is needed
-- every tool or script must be used with proper time limit or better approch  (to prevent freeze )
-- each pdf chapter must contain unit number and name a proper naming scheme for all pdf
+### 9. Trigger next session
+- Comment on the triggering issue: `✅ Completed Grade N Subject. Next: <next book>`
+- If there are more unprocessed books → open a new issue for the next book with label `auto-trigger`
+- That new issue triggers the next Kilo webhook session automatically
+- **If no books remain → post "All done" and close the chain**
 
+---
 
-## Tools in this repo
-- `jpegs_to_pdf.py` — pure Python JPEG → PDF 
-- `book_list.json` — master list of all books by grade
-- `progress.json` — tracks processed book IDs
+## Self-Healing: What Each Session Learns
 
-## Why no automation?
-Previous scripts (`stbb_*.py`, `start_processing.sh`) would:
-- Hang indefinitely on downloads
-- Skip chapters without detection
-- Produce corrupted PDFs
-- Fill disk with raw PDFs
-- Fail git pushes silently
+Each session must leave a **learning trail** in `progress.json` and/or the issue comment so the next session avoids wasted effort.
 
-**Manual = verified, every chapter, every time.**
+### What to document
+| Field | Purpose |
+|-------|---------|
+| `blocker` | Exact failure mode (`blocked:split`, `blocked:pdf`, `blocked:portal`, `blocked:tool`, `blocked:git`) |
+| `detail` | What was tried, what pages were inspected, exact error |
+| `avoid` | **What the next session should NOT do** (e.g. "Do not use `pdftotext` on pages 5-22; they are images only") |
+| `use_instead` | **What worked** (e.g. "Use `pdfimages -j` for this book; it's image-based") |
 
-## For Kilo Cloud Agent (webhook sessions)
-Use **sparse checkout** to avoid downloading all PDFs:
-```bash
-git clone --filter=blob:none --sparse https://github.com/abdulahadattar/STBB-BOOKS.git
-cd STBB-BOOKS
-git sparse-checkout init --cone
-git sparse-checkout set .
-# Process one book...
-git sparse-checkout add "Grade 10/Biology"
-# Add new chapters...
-git commit && git push
-git sparse-checkout remove "Grade 10/Biology"
+### Example learning entry
+```json
+{
+  "id": "198",
+  "title": "Chemsitry X",
+  "grade": "10",
+  "subject": "Chemistry",
+  "blocker": "blocked:split",
+  "issue": 42,
+  "detail": "Pages 5,23,37 are unit title pages without 'Chapter' markers. pdftotext extracts garbage.",
+  "avoid": "Do not use text-based chapter detection on pages 1-60",
+  "use_instead": "Manually specify ranges: Unit 1=5-22, Unit 2=23-36, Unit 3=37-59",
+  "timestamp": "2026-08-23T02:00:00Z"
+}
 ```
-keep updating instrutions with new fidnings in the proceess and when when u hit a wall such as storage or an other issue addd comment or open a new issue on github to create/trigger  a new webhook kilo session to restart the cycle and continue in the loop
+
+### How next session uses it
+- Read `progress.json` → `blocked` array
+- Read the linked GitHub issue → full discussion
+- **Apply the lesson** → skip the failed approach, use the working one
+
+---
+
+## Fixing Corrupt Existing Uploads
+
+Many current chapter PDFs in `Grade 10/Chemistry/`, `Grade 10/Biology/`, etc. are **corrupt or have OCR layers**. Each session must:
+
+1. Scan its target directory before adding new files:
+   ```bash
+   for f in "Grade N/Subject/"*.pdf; do
+     pdfinfo "$f" || echo "CORRUPT: $f"
+     pdftotext "$f" - | head -1 | grep -q . && echo "HAS_OCR: $f"
+   done
+   ```
+2. If corrupt/OCR files exist → **re-upload the correct version**
+3. Git will track the replacement; old corrupt version is overwritten in history
+
+**Priority:** Fix corrupt files in the book you're currently processing before adding new books.
+
+---
+
+## Hard Rules (Non-Negotiable)
+
+| Rule | Why |
+|------|-----|
+| **One book per session** | Prevents 4+ hour hangs |
+| **Exit after one book** | Success or documented blocker — no retry loops |
+| **Verify before commit** | Corrupt PDFs waste hours and bandwidth |
+| **No forbidden scripts** | `stbb_*.py`, `start_processing.sh` freeze forever |
+| **Issue before exit** | Next session needs context |
+| **Pass learning forward** | `progress.json` + issue comments = institutional memory |
+| **Never touch Grade 9/Physics or Grade 10/Physics** | Old full-book PDFs are preserved |
+| **English medium only** | Download URLs must use `?medium=English` |
+
+---
+
+## Session Pseudocode
+
+```python
+def session(issue_number):
+    issue = github.get_issue(issue_number)
+    book = get_next_book(progress.json)
+
+    # Download
+    raw = download(f"https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id={book.id}&download=1")
+    if not raw:
+        document_blocker(book, "blocked:portal", "Download failed")
+        exit()
+
+    # Split
+    ranges = find_chapters(raw)
+    if not ranges:
+        document_blocker(book, "blocked:split", "Cannot detect chapter boundaries", detail=pages_tried)
+        exit()
+
+    # Flatten + verify + commit per chapter
+    for start, end, title in ranges:
+        flatten(raw, start, end, title)
+        verify_pdf(output_path)
+        git_add_commit_push(output_path, book, title)
+
+    # Done
+    mark_processed(book.id)
+    issue.comment(f"✅ Completed {book.title} — {len(ranges)} chapters")
+    trigger_next_issue(book)
+    exit()
+```
+
+---
+
+## Why This Doesn't Get Stuck
+
+| Old Problem | New Fix |
+|-------------|---------|
+| Script loops forever | Session = single book, then exit |
+| Corrupt PDFs uploaded | Verify before commit; re-upload corrupt ones |
+| Hidden state lost on crash | `progress.json` + GitHub issues = persistent state |
+| No learning between sessions | `avoid` / `use_instead` fields in `progress.json` |
+| Disk fills with raw PDFs | Delete raw PDF after each chapter |
+| Chemistry X bad titles | Document exact page ranges, mark `blocked:split`, next session uses manual ranges |
+| Next session has no context | Issue comments + `progress.json` contain full handoff |
+
+---
+
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| See all unprocessed books | `cat book_list.json \| jq '.["Grade 9"]'` |
+| Check progress | `cat progress.json \| jq` |
+| Find blocked books | `cat progress.json \| jq '.blocked'` |
+| Verify PDFs in directory | `for f in *.pdf; do pdfinfo "$f" \|\& grep Pages; done` |
+| Check for OCR layer | `pdftotext file.pdf - \| head -5` (empty = good) |
+| Manually trigger next | Open issue titled "Process: <book>" with label `auto-trigger` |
+
+---
+
+**Every session either succeeds and triggers the next, or leaves a precise trail for the next. No session loops forever.**
