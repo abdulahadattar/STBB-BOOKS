@@ -35,13 +35,13 @@ jobs:
       
       - name: Determine next book to process
         id: pick-book
+        env:
+          BOOK_JSON: ${{ toJSON(env.BOOKS) }}
         run: |
           python3 -c "
-          import json, sys
-          with open('book_list.json') as f:
-            books = json.load(f)
-          with open('progress.json') as f:
-            progress = json.load(f)
+          import json, os, sys
+          books = json.load(open('book_list.json'))
+          progress = json.load(open('progress.json'))
           
           processed = set(progress.get('processed', []))
           failed = set(item['id'] for item in progress.get('failed', []))
@@ -61,7 +61,7 @@ jobs:
               if bid not in skip:
                 grade_data = books.get(grade, {})
                 for title, info in grade_data.items():
-                  if info.get('id') == bid:
+                  if str(info.get('id')) == bid:
                     print(f'{grade}|{title}|{bid}|{info.get(\"subject\", \"\")}')
                     sys.exit(0)
           
@@ -88,8 +88,8 @@ jobs:
           }
           echo "raw_pdf=/tmp/book_${BOOK_ID}.pdf" >> $GITHUB_OUTPUT
       
-      - name: Find chapter boundaries
-        id: chapters
+      - name: Process book into chapters
+        id: process
         env:
           BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
           BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
@@ -100,11 +100,28 @@ jobs:
             "$BOOK_ID" \
             "$BOOK_TITLE" \
             "$GRADE" \
-            "$SUBJECT" \
-            --dry-run || {
-            echo "Chapter detection failed - manual intervention needed"
+            "$SUBJECT"
+      
+      - name: Verify chapter PDFs
+        id: verify
+        env:
+          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
+          SUBJECT: ${{ steps.pick-book.outputs.result.split('|')[3] }}
+        run: |
+          set -e
+          DIR="Grade $GRADE/$SUBJECT"
+          if [ ! -d "$DIR" ]; then
+            echo "No chapter directory found: $DIR"
             exit 1
-          }
+          fi
+          for f in "$DIR"/*.pdf; do
+            echo "Verifying: $f"
+            pdfinfo "$f" | grep Pages
+            # Check no OCR text
+            if pdftotext "$f" - | head -1 | grep -q .; then
+              echo "WARNING: $f appears to have OCR text"
+            fi
+          done
       
       - name: Commit and push chapters
         env:
@@ -141,9 +158,16 @@ jobs:
         env:
           BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
           GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
+          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
         run: |
           echo "✅ Completed $GRADE $BOOK_TITLE"
-          echo "Next book will be triggered by progress.json update"
+          # Create next issue to trigger next webhook session
+          gh issue create \
+            --title "Process next book (auto-trigger)" \
+            --body "Previous book $GRADE $BOOK_TITLE completed. Next unprocessed book will be picked from progress.json." \
+            --label "auto-trigger" || echo "No more books or gh not available"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Document blocker
         if: failure()
