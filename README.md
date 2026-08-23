@@ -101,4 +101,4 @@ git sparse-checkout add "Grade 10/Biology"
 git commit && git push
 git sparse-checkout remove "Grade 10/Biology"
 ```
-keep updating instrutions with new fidnings in the proceess and when when u hit a wall such as storage or an other issue addd comment or open a new issue on github to create a new webhook kilo session to restart the cycle and continue in the loop
+keep updating instrutions with new fidnings in the proceess and when when u hit a wall such as storage or an other issue addd comment or open a new issue on github to create/trigger  a new webhook kilo session to restart the cycle and continue in the loop
