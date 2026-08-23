@@ -3,7 +3,7 @@
 ## Current Status (as of August 2025)
 
 **Done (Grades 1–6):** 22 books processed — chapter-organized PDFs in `Grade 1/` through `Grade 6/`.
-
+Must be veirfied are properly chapter wise broken and flattened (non ocred)
 **Priority: Grades 9–12** — these are the books to process next (from `book_list.json`):
 - **Grade 9**: Biology (117), Chemistry (195), Computer Science (121), Islamiyat 9-10 (267), Math (180), English (147), Physics (174), Religious Studies 9-10 (247)
 - **Grade 10**: Biology (188), Chemistry (198), Computer Science (204), Math (205), Pakistan Studies (235), Physics (202), English (201)
@@ -65,13 +65,16 @@ rm input.pdf chapter_X-*.jpg
 
 ## Hard Rules
 - **One book at a time** — never parallel/automated batch scripts (they skip chapters and hang)
-- **English medium only** — filter `?medium=English` on the portal
-- **Never touch old Physics PDFs** in `Grade 9/Physics/` and `Grade 10/Physics/`
+- **English medium only** — filter `?medium=English` on the stbb portal
 - **Commit after every book** — atomic, verifiable history
 - **Delete raw PDFs after processing** — don't commit them
+- always keep improving updating if any script is needed
+- every tool or script must be used with proper time limit or better approch  (to prevent freeze )
+- each pdf chapter must contain unit number and name a proper naming scheme for all pdf
+
 
 ## Tools in this repo
-- `jpegs_to_pdf.py` — pure Python JPEG → PDF (no external deps)
+- `jpegs_to_pdf.py` — pure Python JPEG → PDF 
 - `book_list.json` — master list of all books by grade
 - `progress.json` — tracks processed book IDs
 
