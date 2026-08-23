@@ -35,20 +35,19 @@ jobs:
       
       - name: Determine next book to process
         id: pick-book
-        env:
-          BOOK_JSON: ${{ toJSON(env.BOOKS) }}
         run: |
           python3 -c "
-          import json, os, sys
-          books = json.load(open('book_list.json'))
-          progress = json.load(open('progress.json'))
+          import json, sys
+          with open('book_list.json') as f:
+            books = json.load(f)
+          with open('progress.json') as f:
+            progress = json.load(f)
           
           processed = set(progress.get('processed', []))
           failed = set(item['id'] for item in progress.get('failed', []))
           blocked = set(item['id'] for item in progress.get('blocked', []))
           skip = processed | failed | blocked
           
-          # Priority order: Grades 9-12
           priority = [
             ('Grade 10', ['188', '198', '204', '235', '205', '201', '267']),
             ('Grade 11', ['219', '206', '203', '207', '221']),
@@ -117,7 +116,6 @@ jobs:
           for f in "$DIR"/*.pdf; do
             echo "Verifying: $f"
             pdfinfo "$f" | grep Pages
-            # Check no OCR text
             if pdftotext "$f" - | head -1 | grep -q .; then
               echo "WARNING: $f appears to have OCR text"
             fi
@@ -161,13 +159,12 @@ jobs:
           BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
         run: |
           echo "✅ Completed $GRADE $BOOK_TITLE"
-          # Create next issue to trigger next webhook session
-          gh issue create \
-            --title "Process next book (auto-trigger)" \
-            --body "Previous book $GRADE $BOOK_TITLE completed. Next unprocessed book will be picked from progress.json." \
-            --label "auto-trigger" || echo "No more books or gh not available"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/abdulahadattar/STBB-BOOKS/issues" \
+            -d "{\"title\":\"Process next book (auto-trigger)\",\"body\":\"Previous book $GRADE $BOOK_TITLE completed. Next unprocessed book will be picked from progress.json.\",\"labels\":[\"auto-trigger\"]}" \
+            || echo "Next issue creation failed"
       
       - name: Document blocker
         if: failure()
