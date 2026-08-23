@@ -126,7 +126,7 @@ def extract_chapter_title(txt, page):
             # Collect title text between marker line and number line
             for k in range(i + 1, num_line):
                 part = lines[k]
-                if len(part) < 2:
+                if len(part) < 3:
                     continue
                 title_parts.append(part)
             
@@ -140,9 +140,9 @@ def extract_chapter_title(txt, page):
                 part = lines[j]
                 if re.match(r'^\d+$', part):
                     continue
-                if len(part) < 2:
+                if len(part) < 3:
                     continue
-                if re.search(r'(Major Concept|In this Unit|Introduction|Ø)', part, re.IGNORECASE):
+                if re.search(r'(Major Concept|In this Unit|Introduction|Ø|Time Allocation)', part, re.IGNORECASE):
                     break
                 if len(part) > 60:
                     break
@@ -154,8 +154,22 @@ def extract_chapter_title(txt, page):
     
     # Try Chapter pattern first
     if not try_extract(r'Chapter', r'Chapter\s*', 0):
-        # Try Unit pattern
-        try_extract(r'Unit', r'Unit\s*', 0)
+        # Try Unit pattern (use word boundary to avoid matching "Units")
+        if not try_extract(r'Unit\b', r'Unit\s*', 0):
+            # Fallback for Time Allocation pages: extract title from first lines
+            for i, line in enumerate(lines):
+                if re.search(r'Time Allocation', line, re.IGNORECASE):
+                    # Collect lines before Time Allocation
+                    for k in range(i):
+                        part = lines[k]
+                        if len(part) < 3:
+                            continue
+                        if re.search(r'(Major Concept|In this Unit|Introduction|Ø)', part, re.IGNORECASE):
+                            break
+                        if len(part) > 60:
+                            break
+                        title_parts.append(part)
+                    break
     
     title = ' '.join(title_parts).strip() if title_parts else f'Unit {page}'
     title = re.sub(r'\s+', ' ', title).strip()
@@ -167,13 +181,15 @@ def page_has_marker(txt):
     """Check if page has chapter/unit marker, handling multi-line layouts"""
     if re.search(r'(?:Chapter|Unit)\s+[-–—]?\s*\d+', txt, re.IGNORECASE | re.DOTALL):
         return True
+    if re.search(r'Time Allocation', txt, re.IGNORECASE):
+        return True
     lines = txt.splitlines()
     for i, line in enumerate(lines):
-        if re.search(r'Chapter', line, re.IGNORECASE):
+        if re.search(r'Chapter\s+$', line, re.IGNORECASE):
             for j in range(i + 1, min(i + 3, len(lines))):
                 if re.match(r'^\s*\d+', lines[j]):
                     return True
-        if re.search(r'Unit', line, re.IGNORECASE):
+        if re.search(r'Unit\s+[-–—]?\s*$', line, re.IGNORECASE):
             for j in range(i + 1, min(i + 3, len(lines))):
                 if re.match(r'^\s*\d+', lines[j]):
                     return True
