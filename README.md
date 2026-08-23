@@ -94,6 +94,7 @@ Each session must leave a **learning trail** in `progress.json` and/or the issue
 | `detail` | What was tried, what pages were inspected, exact error |
 | `avoid` | **What the next session should NOT do** (e.g. "Do not use `pdftotext` on pages 5-22; they are images only") |
 | `use_instead` | **What worked** (e.g. "Use `pdfimages -j` for this book; it's image-based") |
+for example if you find it deficult to find pages use index which are mostly at any where at first 10 pages
 
 ### Example learning entry
 ```json
