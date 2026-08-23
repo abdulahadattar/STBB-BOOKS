@@ -45,6 +45,12 @@
       "title": "Chemsitry IX",
       "class": "Grade 9",
       "error": "PDF corrupt: invalid trailer, null pages object, 0 valid pages"
+    },
+    {
+      "id": "180",
+      "title": "Math IX",
+      "class": "Grade 9",
+      "error": "blocked:split: no Chapter/Unit markers; only Weightage=X% pages without titles"
     }
   ]
 }
