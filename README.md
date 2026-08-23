@@ -1,275 +1,186 @@
-# STBB eBooks Processing — Self-Healing Issue-Driven Workflow
+# STBB eBooks Processing — Self-Healing Webhook Workflow
 
-## Core Idea
+## How It Works
 
-**One webhook session = one book.** No infinite loops, no stuck scripts. Each session:
-1. Picks the next unprocessed book from `book_list.json`
-2. Processes it chapter-by-chapter (verified)
-3. Commits & pushes each chapter
-4. On **success**: closes its tracking issue, opens next book's issue
-5. On **error/blocker**: documents it in the issue, closes with `blocked` label → next session picks up from there
-
-The **GitHub Issue is the state machine** — no hidden session state, no global variables.
+A GitHub issue triggers a Kilo webhook session. That session downloads **one** book, splits it into chapter PDFs, verifies them, pushes them, and then triggers the next session. If anything goes wrong, it documents the exact blocker and exits — no infinite loops.
 
 ---
 
-## Repository State (Source of Truth)
+## What Each Session Must Do (Step by Step)
 
-| File | Purpose |
-|------|---------|
-| `book_list.json` | Master catalog — all books by grade with STBB IDs |
-| `progress.json` | `{ "processed": [...], "failed": [...], "blocked": [...] }` — append-only log |
-| `README.md` | This guide |
-| `jpegs_to_pdf.py` | Zero-dep JPEG → PDF converter |
-| `Grade N/Subject/` | Chapter PDFs (output) |
+### 1. Pick ONE book
+- Read `progress.json` → `processed` array
+- Read `book_list.json` → pick the next unprocessed book from the Grades 9–12 priority list
+- **Only one book per session. No exceptions.**
 
-**No other files.** Scripts that loop forever (`stbb_*.py`, `start_processing.sh`) are **deleted**.
+### 2. Download the raw PDF
+- URL pattern: `https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=<BOOK_ID>&download=1`
+- Save to `/tmp/<book_id>.pdf`
+- Verify download: `pdfinfo /tmp/<book_id>.pdf` → must report total pages
+- If 404/rate-limited → mark `blocked:portal` in `progress.json`, open GitHub issue, **exit**
+
+### 3. Find chapter boundaries
+- Run: `pdftotext -f <page> -l <page> -layout /tmp/<book_id>.pdf -` for each page
+- Look for **either**:
+  - `Chapter N` or `Unit N` markers
+  - **OR** pages with `Time Allocation` (STBB unit info pages)
+- **Critical:** Record exact start/end page for every chapter
+- **Do NOT guess.** If boundaries are unclear → mark `blocked:split`, open issue, **exit**
+
+### 4. Split and flatten each chapter
+For each chapter page range:
+```bash
+pdftoppm -gray -r 120 -f <start> -l <end> /tmp/<book_id>.pdf chapter_prefix
+python jpegs_to_pdf.py chapter_prefix-*.jpg "Grade N/Subject/Chapter NN - <Unit Title>.pdf"
+```
+- Output must be **non-OCR PDF**: no text layer, just images
+- `jpegs_to_pdf.py` is the approved tool — it embeds JPEGs directly, no re-encoding
+- **Do NOT use** `stbb_one.py`, `stbb_final.py`, `stbb_pure.py`, `stbb_processor.py`, `start_processing.sh` — they freeze and produce corrupt output
+
+### 5. Verify EVERY chapter PDF
+```bash
+pdfinfo "Grade N/Subject/Chapter NN - <Unit Title>.pdf"   # must have pages > 0
+pdftotext "Grade N/Subject/Chapter NN - <Unit Title>.pdf" - | head -5  # must be EMPTY (no OCR)
+```
+- If `pdfinfo` fails or pages = 0 → **corrupt**, do not commit
+- If `pdftotext` returns text → **has OCR layer**, re-flatten
+- Open the PDF visually if possible — confirm it renders
+- **All chapters must verify before any commit**
+
+### 6. Commit and push
+```bash
+git add "Grade N/Subject/Chapter NN - <Unit Title>.pdf"
+git commit -m "Add Grade N Subject: Chapter NN - <Unit Title>"
+git pull --rebase origin main
+git push origin main
+```
+- One commit per chapter is ideal, but at minimum: one commit per book
+- If push fails with HTTP 413/502 → split into smaller commits, retry
+- If push fails for other reasons → mark `blocked:git`, open issue, **exit**
+
+### 7. Update progress.json
+```json
+{
+  "processed": ["188", "198", ...],
+  "failed": [...],
+  "blocked": [...]
+}
+```
+- Append book ID to `processed`
+- Commit and push `progress.json`
+
+### 8. Clean up
+```bash
+rm /tmp/<book_id>.pdf chapter_prefix-*.jpg
+```
+
+### 9. Trigger next session
+- Comment on the triggering issue: `✅ Completed Grade N Subject. Next: <next book>`
+- If there are more unprocessed books → open a new issue for the next book with label `auto-trigger`
+- That new issue triggers the next Kilo webhook session automatically
+- **If no books remain → post "All done" and close the chain**
 
 ---
 
-## Webhook Trigger Contract
+## Self-Healing: What Each Session Learns
 
-**Endpoint:** `POST /webhook/stbb-process` (Kilo GitHub webhook)
+Each session must leave a **learning trail** in `progress.json` and/or the issue comment so the next session avoids wasted effort.
 
-**Payload:** `{ "issue_number": 123 }` — the issue created by the previous session (or manual start)
+### What to document
+| Field | Purpose |
+|-------|---------|
+| `blocker` | Exact failure mode (`blocked:split`, `blocked:pdf`, `blocked:portal`, `blocked:tool`, `blocked:git`) |
+| `detail` | What was tried, what pages were inspected, exact error |
+| `avoid` | **What the next session should NOT do** (e.g. "Do not use `pdftotext` on pages 5-22; they are images only") |
+| `use_instead` | **What worked** (e.g. "Use `pdfimages -j` for this book; it's image-based") |
 
-**Session MUST:**
-- Exit within **10 minutes** (hard timeout)
-- Process **exactly one book**
-- Leave repo in a consistent state (commits pushed, progress.json updated, issue commented)
+### Example learning entry
+```json
+{
+  "id": "198",
+  "title": "Chemsitry X",
+  "grade": "10",
+  "subject": "Chemistry",
+  "blocker": "blocked:split",
+  "issue": 42,
+  "detail": "Pages 5,23,37 are unit title pages without 'Chapter' markers. pdftotext extracts garbage.",
+  "avoid": "Do not use text-based chapter detection on pages 1-60",
+  "use_instead": "Manually specify ranges: Unit 1=5-22, Unit 2=23-36, Unit 3=37-59",
+  "timestamp": "2026-08-23T02:00:00Z"
+}
+```
+
+### How next session uses it
+- Read `progress.json` → `blocked` array
+- Read the linked GitHub issue → full discussion
+- **Apply the lesson** → skip the failed approach, use the working one
 
 ---
 
-## Session Flow (Pseudocode)
+## Fixing Corrupt Existing Uploads
+
+Many current chapter PDFs in `Grade 10/Chemistry/`, `Grade 10/Biology/`, etc. are **corrupt or have OCR layers**. Each session must:
+
+1. Scan its target directory before adding new files:
+   ```bash
+   for f in "Grade N/Subject/"*.pdf; do
+     pdfinfo "$f" || echo "CORRUPT: $f"
+     pdftotext "$f" - | head -1 | grep -q . && echo "HAS_OCR: $f"
+   done
+   ```
+2. If corrupt/OCR files exist → **re-upload the correct version**
+3. Git will track the replacement; old corrupt version is overwritten in history
+
+**Priority:** Fix corrupt files in the book you're currently processing before adding new books.
+
+---
+
+## Hard Rules (Non-Negotiable)
+
+| Rule | Why |
+|------|-----|
+| **One book per session** | Prevents 4+ hour hangs |
+| **Exit after one book** | Success or documented blocker — no retry loops |
+| **Verify before commit** | Corrupt PDFs waste hours and bandwidth |
+| **No forbidden scripts** | `stbb_*.py`, `start_processing.sh` freeze forever |
+| **Issue before exit** | Next session needs context |
+| **Pass learning forward** | `progress.json` + issue comments = institutional memory |
+| **Never touch Grade 9/Physics or Grade 10/Physics** | Old full-book PDFs are preserved |
+| **English medium only** | Download URLs must use `?medium=English` |
+
+---
+
+## Session Pseudocode
 
 ```python
-def main(issue_number):
+def session(issue_number):
     issue = github.get_issue(issue_number)
-    book = parse_book_from_issue(issue)  # {grade, subject, id, title}
-    
-    try:
-        # 1. Download raw PDF (English medium only)
-        raw_pdf = download_stbb_book(book['id'])
-        
-        # 2. Split into chapters (pdftoppm → find Unit boundaries)
-        chapters = split_into_chapters(raw_pdf, book)
-        
-        # 3. For each chapter: flatten → verify → commit → push
-        for ch in chapters:
-            pdf_path = flatten_chapter(ch)           # pdftoppm + jpegs_to_pdf.py
-            verify_pdf(pdf_path)                     # open, check pages, size
-            git_commit_push(pdf_path, book, ch)      # one commit per chapter
-            update_progress_json(book['id'], ch)     # append to progress.json
-        
-        # 4. SUCCESS — mark processed, close issue, open next
-        mark_processed(book['id'])
-        issue.comment(f"✅ Completed {book['title']} — {len(chapters)} chapters uploaded")
-        issue.close()
-        next_book = get_next_unprocessed_book()
-        if next_book:
-            github.create_issue(
-                title=f"Process: {next_book['title']} (Grade {next_book['grade']})",
-                body=issue_template(next_book),
-                labels=["auto-trigger"]
-            )
-        
-    except BlockerError as e:
-        # 5. BLOCKER — document, label, close issue, DON'T retry
-        issue.comment(f"🛑 BLOCKED: {e}\n\nNext session: see `progress.json` → `blocked`")
-        issue.add_labels(["blocked", "needs-human"])
-        issue.close()
-        mark_blocked(book['id'], str(e))
-    
-    except Exception as e:
-        # 6. UNEXPECTED ERROR — log, label, close
-        issue.comment(f"❌ ERROR: {type(e).__name__}: {e}\n\nTraceback in workflow run.")
-        issue.add_labels(["error", "needs-human"])
-        issue.close()
-        mark_failed(book['id'], str(e))
+    book = get_next_book(progress.json)
 
-# Session ALWAYS exits here — no loops, no retries, no sleep.
+    # Download
+    raw = download(f"https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id={book.id}&download=1")
+    if not raw:
+        document_blocker(book, "blocked:portal", "Download failed")
+        exit()
+
+    # Split
+    ranges = find_chapters(raw)
+    if not ranges:
+        document_blocker(book, "blocked:split", "Cannot detect chapter boundaries", detail=pages_tried)
+        exit()
+
+    # Flatten + verify + commit per chapter
+    for start, end, title in ranges:
+        flatten(raw, start, end, title)
+        verify_pdf(output_path)
+        git_add_commit_push(output_path, book, title)
+
+    # Done
+    mark_processed(book.id)
+    issue.comment(f"✅ Completed {book.title} — {len(ranges)} chapters")
+    trigger_next_issue(book)
+    exit()
 ```
-
----
-
-## Issue Template (Auto-generated)
-
-```markdown
-<!-- AUTO-GENERATED — DO NOT EDIT MANUALLY -->
-## Book: Biology IX (Grade 9)
-**STBB ID:** 117 | **Grade:** 9 | **Subject:** Biology
-
-### Status
-- [ ] Raw PDF downloaded
-- [ ] Chapters split (Unit boundaries identified)
-- [ ] Chapter 1 uploaded
-- [ ] Chapter 2 uploaded
-- [ ] ... (one checkbox per chapter)
-- [ ] `progress.json` updated
-
-### Blocker Checklist (if stuck)
-- [ ] STBB portal 404 / rate limited
-- [ ] PDF corrupt / password protected
-- [ ] Unit boundaries unclear
-- [ ] `pdftoppm` / `jpegs_to_pdf.py` failed
-- [ ] Git push rejected (permissions, size)
-- [ ] Other: ______
-
-### Handoff Notes
-> Next session: continue from first unchecked chapter.
-> If all chapters done but push failed → retry push only.
-> If blocker → see `progress.json` → `blocked` array.
-```
-
----
-
-## Blocker Taxonomy (So Next Session Knows)
-
-| Label | Meaning | Next Session Action |
-|-------|---------|---------------------|
-| `blocked:portal` | STBB site down / 404 / rate limit | Wait, retry download (exponential backoff) |
-| `blocked:pdf` | Corrupt, password, weird structure | Human review needed — open manual issue |
-| `blocked:split` | Can't find Unit boundaries | Human: open PDF, note page ranges |
-| `blocked:tool` | `pdftoppm` / converter crash | Fix tool / use alternative |
-| `blocked:git` | Push rejected (size, perms, LFS) | Split further / use LFS / check auth |
-| `blocked:unknown` | Anything else | Human triage |
-
-**Each blocker gets a unique issue** with the label — searchable, auditable.
-
----
-
-## Progress.json Schema (Append-Only)
-
-```json
-{
-  "processed": ["139", "39", "40", "104", "86", "140", ...],
-  "failed": [
-    {"id": "113", "title": "General Knowledge III", "grade": "3", "error": "HTTP 404", "timestamp": "2025-08-22T..."}
-  ],
-  "blocked": [
-    {"id": "174", "title": "Physics IX", "grade": "9", "blocker": "blocked:portal", "detail": "STBB rate limit", "issue": 42, "timestamp": "2025-08-22T..."}
-  ]
-}
-```
-
-- **Never remove** from `processed` — it's an audit trail
-- `blocked` entries reference the GitHub issue number
-- Next session reads `progress.json` to know where to start
-
----
-
-## Self-Healing Issue-Driven Loop
-
-**This repo is designed for Kilo webhook sessions. Each session = one book = one exit.**
-
-The GitHub Issue is the state machine. When a session gets stuck, it documents the blocker in the issue and exits. The next session reads the issue + `progress.json` and continues.
-
-### The Loop
-
-```mermaid
-stateDiagram-v2
-    [*] --> Webhook: Issue created/edited
-    Webhook --> Session: Spawn Kilo agent
-    Session --> PickBook: Read progress.json
-    PickBook --> Process: Next unprocessed book
-    Process --> Success: All chapters uploaded & pushed
-    Process --> Blocker: Hit wall (download fail, bad PDF, can't split, push fail)
-    Success --> CloseIssue: Comment ✅, close issue
-    Blocker --> DocumentBlocker: Open new issue with blocker label
-    DocumentBlocker --> Exit: Update progress.json, push, exit
-    CloseIssue --> TriggerNext: Create next book's issue
-    TriggerNext --> Webhook: New issue → new webhook → new session
-    Exit --> [*]
-```
-
-### Why This Gets Stuck If You Don't Follow It
-
-| Anti-Pattern | What Happens | Fix |
-|---|---|---|
-| Processing all 22 books in one session | Runs 4+ hours, times out, no commits | **One book per session** |
-| Looping on same book after blocker | Wastes hours, no progress | **Document blocker → exit → next session** |
-| No issue created when stuck | Next session has no context | **Always open a labeled issue before exiting** |
-| Hidden state in session memory | Lost on timeout/crash | **GitHub Issue + progress.json = state** |
-| Chemistry X / bad chapter detection | Script extracts wrong titles, produces garbage | **Document exact page ranges, mark blocked:split** |
-
-### Chemistry X Lesson (ID 198)
-
-Chemistry X exposed a real edge case: chapter title pages don't have "Chapter N" markers on the first 3 units. The script will:
-- Detect page 5 as a chapter start (it has "Time Allocation")
-- Extract garbage titles like "1.3 Equilibrium constant..."
-- Produce wrong chapter splits
-
-**If chapter detection produces wrong titles or boundaries:**
-1. **STOP** — do not commit bad chapters
-2. **Open a blocker issue** with label `blocked:split`
-3. **Document**: "Chemistry X — pages 5, 23, 37 are unit title pages without 'Chapter' markers. Need manual page-range mapping: [list pages]"
-4. **Exit the session**
-
-The next session (or human) will fix the detector or manually specify ranges.
-
-### Blocker Issue Template
-
-```markdown
-**BLOCKED:** Grade {grade} {subject} (ID: {id})
-
-**Blocker type:** `blocked:split` | `blocked:pdf` | `blocked:portal` | `blocked:tool` | `blocked:git`
-
-**What happened:**
-{exact error or issue}
-
-**What was tried:**
-{steps, page numbers inspected, commands run}
-
-**What the next session needs:**
-{explicit handoff — page ranges, fixed URL, tool version, etc.}
-```
-
-### Progress.json Update on Blocker
-
-```json
-{
-  "blocked": [
-    {
-      "id": "198",
-      "title": "Chemsitry X",
-      "grade": "10",
-      "subject": "Chemistry",
-      "blocker": "blocked:split",
-      "issue": 42,
-      "detail": "Pages 5,23,37 have no Chapter marker; detector extracts wrong titles",
-      "timestamp": "2026-08-23T02:00:00Z"
-    }
-  ]
-}
-```
-
-### The Golden Rules
-
-1. **One book per session** — hard stop after one book, success or failure
-2. **No blind retries** — if a step fails twice, document and exit
-3. **Issue before exit** — always leave a GitHub issue with status
-4. **Chemistry X / bad detection → blocked:split** — don't commit garbage
-5. **Exit is always success** — even a blocker issue is progress
-
----
-
-## Kilo Cloud Agent: Sparse Checkout (No Full Repo Download)
-
-```bash
-# In webhook session startup (runs fresh each time):
-git clone --filter=blob:none --sparse https://github.com/abdulahadattar/STBB-BOOKS.git
-cd STBB-BOOKS
-git sparse-checkout init --cone
-git sparse-checkout set .  # only control files
-
-# When processing Grade 10 Biology:
-git sparse-checkout add "Grade 10/Biology"
-# ... add chapter PDFs ...
-git commit && git push
-git sparse-checkout remove "Grade 10/Biology"  # free space
-```
-
-**Blob filter** = no 500MB of PDFs downloaded. Only the few MB for the active book.
 
 ---
 
@@ -277,57 +188,27 @@ git sparse-checkout remove "Grade 10/Biology"  # free space
 
 | Old Problem | New Fix |
 |-------------|---------|
-| Script loops forever | Session = single function, 10-min hard timeout |
-| Skips chapters silently | One commit per chapter, verified before push |
-| Hidden state lost on crash | State = GitHub Issue + `progress.json` (both persistent) |
-| No retry logic | Blocker → labeled issue → human or next session with context |
-| Disk fills with raw PDFs | Sparse checkout + delete raw after each chapter |
-| Full repo clone every time | `--filter=blob:none` + sparse checkout |
+| Script loops forever | Session = single book, then exit |
+| Corrupt PDFs uploaded | Verify before commit; re-upload corrupt ones |
+| Hidden state lost on crash | `progress.json` + GitHub issues = persistent state |
+| No learning between sessions | `avoid` / `use_instead` fields in `progress.json` |
+| Disk fills with raw PDFs | Delete raw PDF after each chapter |
+| Chemistry X bad titles | Document exact page ranges, mark `blocked:split`, next session uses manual ranges |
+| Next session has no context | Issue comments + `progress.json` contain full handoff |
 
 ---
 
-## Starting the Chain (First Time)
-
-```bash
-# Manual: create the first issue
-gh issue create \
-  --title "Process: Biology IX (Grade 9)" \
-  --body "$(cat .github/issue_templates/stbb_book.md)" \
-  --label "auto-trigger"
-```
-
-Webhook watches for `issues.opened` with label `auto-trigger` → starts session.
-
----
-
-## Next Steps to Implement
-
-1. **Add webhook handler** (small Flask/FastAPI) that:
-   - Receives `{issue_number}`
-   - Spawns session script with timeout
-   - Returns 202 immediately
-
-2. **Write session script** (`process_one_book.py`) implementing the flow above
-
-3. **Add `.github/workflows/stbb-webhook.yml`** to trigger on `issues.opened` with `auto-trigger` label
-
-4. **Seed first issue** for Biology IX (ID 117)
-
-5. **Test with one book** → verify chain continues
-
----
-
-## Quick Reference for Humans
+## Quick Reference
 
 | Task | Command |
 |------|---------|
-| See all books | `cat book_list.json \| jq '.["Grade 9"]'` |
+| See all unprocessed books | `cat book_list.json \| jq '.["Grade 9"]'` |
 | Check progress | `cat progress.json \| jq` |
 | Find blocked books | `cat progress.json \| jq '.blocked'` |
-| Manually trigger next | `gh issue create --title "Process: Chemistry IX (Grade 9)" --label auto-trigger` |
-| View blocker history | `gh issue list --label blocked --state closed` |
-| Resume blocked book | Fix blocker → `gh issue reopen <num>` → add `auto-trigger` label |
+| Verify PDFs in directory | `for f in *.pdf; do pdfinfo "$f" \|\& grep Pages; done` |
+| Check for OCR layer | `pdftotext file.pdf - \| head -5` (empty = good) |
+| Manually trigger next | Open issue titled "Process: <book>" with label `auto-trigger` |
 
 ---
 
-**The system self-documents, self-hands-off, and never loops forever.** Every session either succeeds or leaves a clear trail for the next one.
+**Every session either succeeds and triggers the next, or leaves a precise trail for the next. No session loops forever.**
