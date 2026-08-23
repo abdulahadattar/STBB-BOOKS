@@ -20,6 +20,7 @@ A GitHub issue triggers a Kilo webhook session. That session downloads **one** b
 - If 404/rate-limited → mark `blocked:portal` in `progress.json`, open GitHub issue, **exit**
 
 ### 3. Find chapter boundaries
+first 10 pages might contain index in some books that might be helpful to find boundries
 - Run: `pdftotext -f <page> -l <page> -layout /tmp/<book_id>.pdf -` for each page
 - Look for **either**:
   - `Chapter N` or `Unit N` markers
@@ -93,6 +94,7 @@ Each session must leave a **learning trail** in `progress.json` and/or the issue
 | `detail` | What was tried, what pages were inspected, exact error |
 | `avoid` | **What the next session should NOT do** (e.g. "Do not use `pdftotext` on pages 5-22; they are images only") |
 | `use_instead` | **What worked** (e.g. "Use `pdfimages -j` for this book; it's image-based") |
+for example if you find it deficult to find pages use index which are mostly at any where at first 10 pages
 
 ### Example learning entry
 ```json
