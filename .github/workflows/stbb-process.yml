@@ -1,0 +1,156 @@
+name: STBB Book Processor
+
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created]
+
+jobs:
+  process-book:
+    if: |
+      contains(github.event.issue.labels.*.name, 'auto-trigger') ||
+      contains(github.event.issue.labels.*.name, 'process-next')
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    
+    steps:
+      - name: Checkout repo (sparse, no PDFs)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            README.md
+            book_list.json
+            progress.json
+            jpegs_to_pdf.py
+            process_one_book.py
+            .github/
+          sparse-checkout-cone-mode: false
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          python3 -m pip install --quiet requests
+      
+      - name: Determine next book to process
+        id: pick-book
+        run: |
+          python3 -c "
+          import json, sys
+          with open('book_list.json') as f:
+            books = json.load(f)
+          with open('progress.json') as f:
+            progress = json.load(f)
+          
+          processed = set(progress.get('processed', []))
+          failed = set(item['id'] for item in progress.get('failed', []))
+          blocked = set(item['id'] for item in progress.get('blocked', []))
+          skip = processed | failed | blocked
+          
+          # Priority order: Grades 9-12
+          priority = [
+            ('Grade 10', ['188', '198', '204', '235', '205', '201', '267']),
+            ('Grade 11', ['219', '206', '203', '207', '221']),
+            ('Grade 12', ['228', '218', '225', '215']),
+            ('Grade 9', ['117', '195', '121', '267', '180', '147', '174', '247']),
+          ]
+          
+          for grade, ids in priority:
+            for bid in ids:
+              if bid not in skip:
+                grade_data = books.get(grade, {})
+                for title, info in grade_data.items():
+                  if info.get('id') == bid:
+                    print(f'{grade}|{title}|{bid}|{info.get(\"subject\", \"\")}')
+                    sys.exit(0)
+          
+          print('NONE')
+          "
+      
+      - name: No books left
+        if: steps.pick-book.outputs.result == 'NONE'
+        run: |
+          echo "All books processed!"
+          exit 0
+      
+      - name: Download raw PDF
+        id: download
+        env:
+          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
+        run: |
+          mkdir -p _raw
+          curl -s -L "https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=${BOOK_ID}&download=1" \
+            -o "/tmp/book_${BOOK_ID}.pdf"
+          pdfinfo "/tmp/book_${BOOK_ID}.pdf" || {
+            echo "Download failed or corrupt PDF"
+            exit 1
+          }
+          echo "raw_pdf=/tmp/book_${BOOK_ID}.pdf" >> $GITHUB_OUTPUT
+      
+      - name: Find chapter boundaries
+        id: chapters
+        env:
+          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
+          BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
+          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
+          SUBJECT: ${{ steps.pick-book.outputs.result.split('|')[3] }}
+        run: |
+          python3 process_one_book.py \
+            "$BOOK_ID" \
+            "$BOOK_TITLE" \
+            "$GRADE" \
+            "$SUBJECT" \
+            --dry-run || {
+            echo "Chapter detection failed - manual intervention needed"
+            exit 1
+          }
+      
+      - name: Commit and push chapters
+        env:
+          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
+          BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
+          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
+        run: |
+          git config user.email "kilo@example.com"
+          git config user.name "Kilo Agent"
+          git add -A
+          git commit -m "Add $GRADE $BOOK_TITLE chapters" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
+      
+      - name: Update progress.json
+        env:
+          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
+        run: |
+          python3 -c "
+          import json
+          with open('progress.json') as f:
+            data = json.load(f)
+          if '$BOOK_ID' not in data.get('processed', []):
+            data.setdefault('processed', []).append('$BOOK_ID')
+          with open('progress.json', 'w') as f:
+            json.dump(data, f, indent=2)
+          "
+          git add progress.json
+          git commit -m "Update progress: processed $BOOK_ID"
+          git push origin main
+      
+      - name: Trigger next book
+        if: success()
+        env:
+          BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
+          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
+        run: |
+          echo "✅ Completed $GRADE $BOOK_TITLE"
+          echo "Next book will be triggered by progress.json update"
+      
+      - name: Document blocker
+        if: failure()
+        env:
+          BOOK_ID: ${{ steps.pick-book.outputs.result.split('|')[2] }}
+          BOOK_TITLE: ${{ steps.pick-book.outputs.result.split('|')[1] }}
+          GRADE: ${{ steps.pick-book.outputs.result.split('|')[0] }}
+        run: |
+          echo "🛑 BLOCKED: $GRADE $BOOK_TITLE (ID: $BOOK_ID)"
+          echo "See workflow run logs for details"
