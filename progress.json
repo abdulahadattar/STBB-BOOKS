@@ -22,9 +22,17 @@
     "80",
     "46",
     "287",
-      "260",
-      "188",
-      "198"
+    "260",
+    "188",
+    "198",
+    "117",
+    "121",
+    "204",
+    "235",
+    "247",
+    "267",
+    "205",
+    "201"
   ],
   "failed": [
     {
@@ -32,6 +40,18 @@
       "title": "General Knowledge III",
       "class": "Grade 3",
       "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "id": "195",
+      "title": "Chemsitry IX",
+      "class": "Grade 9",
+      "error": "PDF corrupt: invalid trailer, null pages object, 0 valid pages"
+    },
+    {
+      "id": "180",
+      "title": "Math IX",
+      "class": "Grade 9",
+      "error": "blocked:split: no Chapter/Unit markers; only Weightage=X% pages without titles"
     }
   ]
 }
