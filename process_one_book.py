@@ -11,9 +11,13 @@ import urllib.error
 import time
 import shutil
 
-WORKSPACE = "/workspace/4fba1b35-c093-4694-aa80-9a73b48e2a0f/sessions/agent_84289d02-76d0-4c73-9933-d3f6f6db2218/STBB-BOOKS"
+WORKSPACE = os.path.dirname(os.path.abspath(__file__))
 BASE_URL = "https://portal.stbb.edu.pk"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+try:
+    import pymupdf
+except Exception:
+    pymupdf = None
 
 
 def log(msg):
@@ -78,6 +82,13 @@ def download_pdf(book_id, title, class_name):
 
 
 def get_pdf_page_count(pdf_path):
+    if pymupdf is not None:
+        try:
+            with pymupdf.open(pdf_path) as doc:
+                return doc.page_count
+        except Exception as e:
+            log(f"  pymupdf error in get_pdf_page_count: {e}")
+            return 0
     result = run_cmd(["pdfinfo", pdf_path], timeout=30)
     if not result:
         return 0
@@ -88,6 +99,15 @@ def get_pdf_page_count(pdf_path):
 
 
 def extract_text_page(pdf_path, page):
+    if pymupdf is not None:
+        try:
+            with pymupdf.open(pdf_path) as doc:
+                if 1 <= page <= doc.page_count:
+                    return doc[page - 1].get_text().strip()
+                return ""
+        except Exception as e:
+            log(f"  pymupdf error in extract_text_page: {e}")
+            return ""
     result = run_cmd(
         ["pdftotext", "-f", str(page), "-l", str(page), "-layout", pdf_path, "-"],
         timeout=30
@@ -261,40 +281,53 @@ def flatten_pdf(input_pdf, output_pdf, start_page, end_page):
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir)
-    
+
     try:
-        cmd = [
-            "pdftoppm",
-            "-f", str(start_page),
-            "-l", str(end_page),
-            "-jpeg",
-            "-jpegopt", "quality=80",
-            "-r", "120",
-            "-gray",
-            input_pdf,
-            os.path.join(temp_dir, "page")
-        ]
-        result = run_cmd(cmd, timeout=120, check=False)
-        if not result or result.returncode != 0:
-            log(f"  pdftoppm error: {result.stderr[:200] if result else 'timeout'}")
-            return False
-        
-        images = sorted([
-            os.path.join(temp_dir, f)
-            for f in os.listdir(temp_dir)
-            if f.endswith('.jpg')
-        ])
-        
+        images = []
+        if pymupdf is not None:
+            try:
+                with pymupdf.open(input_pdf) as doc:
+                    for i in range(start_page - 1, min(end_page, doc.page_count)):
+                        page = doc.load_page(i)
+                        pix = page.get_pixmap(matrix=pymupdf.Matrix(1.5, 1.5), alpha=False)
+                        img_path = os.path.join(temp_dir, f"page_{i+1:04d}.jpg")
+                        pix.save(img_path, output="jpeg", jpg_quality=80)
+                        images.append(img_path)
+            except Exception as e:
+                log(f"  pymupdf render error: {e}")
+                images = []
+        if not images:
+            cmd = [
+                "pdftoppm",
+                "-f", str(start_page),
+                "-l", str(end_page),
+                "-jpeg",
+                "-jpegopt", "quality=80",
+                "-r", "120",
+                "-gray",
+                input_pdf,
+                os.path.join(temp_dir, "page")
+            ]
+            result = run_cmd(cmd, timeout=120, check=False)
+            if not result or result.returncode != 0:
+                log(f"  pdftoppm error: {result.stderr[:200] if result else 'timeout'}")
+                return False
+            images = sorted([
+                os.path.join(temp_dir, f)
+                for f in os.listdir(temp_dir)
+                if f.endswith('.jpg')
+            ])
+
         if not images:
             log("  No images generated")
             return False
-        
-        cmd = ["python3", os.path.join(WORKSPACE, "jpegs_to_pdf.py"), output_pdf] + images
+
+        cmd = [sys.executable, os.path.join(WORKSPACE, "jpegs_to_pdf.py"), output_pdf] + images
         result = run_cmd(cmd, timeout=120, check=False)
         if not result or result.returncode != 0:
             log(f"  jpegs_to_pdf error: {result.stderr[:200] if result else 'timeout'}")
             return False
-        
+
         size_kb = os.path.getsize(output_pdf) // 1024
         log(f"  Flattened: {os.path.basename(output_pdf)} ({size_kb}KB, {len(images)} pages)")
         return True

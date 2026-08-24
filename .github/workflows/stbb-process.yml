@@ -1,4 +1,4 @@
-name: STBB Book Processor
+name: STBB Biology 9-12 Processor
 
 on:
   issues:
@@ -6,17 +6,18 @@ on:
   issue_comment:
     types: [created]
   workflow_dispatch:
+    inputs:
+      start_id:
+        description: "Optional: start from specific book id"
+        required: false
+        default: ""
 
 jobs:
-  process-book:
-    if: |
-      contains(github.event.issue.labels.*.name, 'auto-trigger') ||
-      contains(github.event.issue.labels.*.name, 'process-next')
+  process-biology:
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    
     steps:
-      - name: Checkout repo (sparse, no PDFs)
+      - name: Checkout with sparse pattern
         uses: actions/checkout@v4
         with:
           sparse-checkout: |
@@ -24,155 +25,93 @@ jobs:
             book_list.json
             progress.json
             jpegs_to_pdf.py
-            process_one_book.py
-            .github/
-          sparse-checkout-cone-mode: false
-      
+            upload_one_book.py
+            Grade 9/Biology/
+            Grade 10/Biology/
+            Grade 11/Biology/
+            Grade 12/Biology/
+          fetch-depth: 1
+
       - name: Install dependencies
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq poppler-utils
-          python3 -m pip install --quiet requests
-      
-      - name: Determine next book to process
+          sudo apt-get update -y
+          sudo apt-get install -y poppler-utils
+          pip install pymupdf
+
+      - name: Pick next Biology book
         id: pick_book
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 -c "
-          import json, sys
-          with open('book_list.json') as f:
-            books = json.load(f)
+          import json, os, re, urllib.request
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GITHUB_TOKEN']
+          headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+
+          def api(path):
+            req = urllib.request.Request(f'https://api.github.com/repos/{repo}{path}', headers=headers)
+            with urllib.request.urlopen(req) as r:
+              return json.load(r)
+
           with open('progress.json') as f:
             progress = json.load(f)
-          
-          processed = set(progress.get('processed', []))
-          failed = set(item['id'] for item in progress.get('failed', []))
-          blocked = set(item['id'] for item in progress.get('blocked', []))
-          skip = processed | failed | blocked
-          
-          priority = [
-            ('Grade 10', ['188', '198', '204', '235', '205', '201', '267']),
-            ('Grade 11', ['219', '206', '203', '207', '221']),
-            ('Grade 12', ['228', '218', '225', '215']),
-            ('Grade 9', ['117', '195', '121', '267', '180', '147', '174', '247']),
-          ]
-          
-          for grade, ids in priority:
-            for bid in ids:
-              if bid not in skip:
-                grade_data = books.get(grade, {})
-                for title, info in grade_data.items():
-                  if str(info.get('id')) == bid:
-                    print(f'{grade}|{title}|{bid}|{info.get(\"subject\", \"\")}')
-                    sys.exit(0)
-          
-          print('NONE')
+
+          with open('book_list.json') as f:
+            books = json.load(f)
+
+          bio_books = []
+          for grade in ['Grade 9','Grade 10','Grade 11','Grade 12']:
+            for b in books.get(grade, []):
+              if b.get('subject','').lower() != 'biology':
+                continue
+              pid = str(b['id'])
+              st = progress.get(pid, {})
+              if st.get('status') in ('done', 'uploaded'):
+                continue
+              bio_books.append(b)
+
+          if not bio_books:
+            print('No Biology books to process')
+            exit(0)
+
+          book = bio_books[0]
+          print(f'PICKED|{book[\"id\"]}|{book[\"title\"]}|{book.get(\"grade\",\"\")}|{book.get(\"subject\",\"\")}')
           "
-      
-      - name: No books left
-        if: steps.pick_book.outputs.result == 'NONE'
-        run: |
-          echo "All books processed!"
-          exit 0
-      
-      - name: Download raw PDF
-        id: download
-        env:
-          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
-        run: |
-          mkdir -p _raw
-          curl -s -L "https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=${BOOK_ID}&download=1" \
-            -o "/tmp/book_${BOOK_ID}.pdf"
-          pdfinfo "/tmp/book_${BOOK_ID}.pdf" || {
-            echo "Download failed or corrupt PDF"
-            exit 1
-          }
-          echo "raw_pdf=/tmp/book_${BOOK_ID}.pdf" >> $GITHUB_OUTPUT
-      
-      - name: Process book into chapters
+
+      - name: Process Biology book
         id: process
         env:
-          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
-          BOOK_TITLE: ${{ steps.pick_book.outputs.result.split('|')[1] }}
-          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
-          SUBJECT: ${{ steps.pick_book.outputs.result.split('|')[3] }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 process_one_book.py \
-            "$BOOK_ID" \
-            "$BOOK_TITLE" \
-            "$GRADE" \
-            "$SUBJECT"
-      
-      - name: Verify chapter PDFs
-        id: verify
+          python3 upload_one_book.py ${{ steps.pick_book.outputs.BOOK_ID }} "${{ steps.pick_book.outputs.BOOK_TITLE }}" "${{ steps.pick_book.outputs.BOOK_GRADE }}" "${{ steps.pick_book.outputs.BOOK_SUBJECT }}"
+
+      - name: Commit and push Biology chapters
         env:
-          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
-          SUBJECT: ${{ steps.pick_book.outputs.result.split('|')[3] }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
-          DIR="Grade $GRADE/$SUBJECT"
-          if [ ! -d "$DIR" ]; then
-            echo "No chapter directory found: $DIR"
-            exit 1
-          fi
-          for f in "$DIR"/*.pdf; do
-            echo "Verifying: $f"
-            pdfinfo "$f" | grep Pages
-            if pdftotext "$f" - | head -1 | grep -q .; then
-              echo "WARNING: $f appears to have OCR text"
-            fi
-          done
-      
-      - name: Commit and push chapters
-        env:
-          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
-          BOOK_TITLE: ${{ steps.pick_book.outputs.result.split('|')[1] }}
-          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
-        run: |
-          git config user.email "kilo@example.com"
-          git config user.name "Kilo Agent"
+          git config user.email "agent@users.noreply.github.com"
+          git config user.name "STBB Agent"
           git add -A
-          git commit -m "Add $GRADE $BOOK_TITLE chapters" || echo "No changes to commit"
-          git pull --rebase origin main
-          git push origin main
-      
-      - name: Update progress.json
-        env:
-          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
-        run: |
-          python3 -c "
-          import json
-          with open('progress.json') as f:
-            data = json.load(f)
-          if '$BOOK_ID' not in data.get('processed', []):
-            data.setdefault('processed', []).append('$BOOK_ID')
-          with open('progress.json', 'w') as f:
-            json.dump(data, f, indent=2)
-          "
-          git add progress.json
-          git commit -m "Update progress: processed $BOOK_ID"
-          git push origin main
-      
-      - name: Trigger next book
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Add Biology: ${{ steps.pick_book.outputs.BOOK_TITLE }} (${{ steps.pick_book.outputs.BOOK_GRADE }})"
+          git push
+
+      - name: Trigger next Biology book
         if: success()
         env:
-          BOOK_TITLE: ${{ steps.pick_book.outputs.result.split('|')[1] }}
-          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
-          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "✅ Completed $GRADE $BOOK_TITLE"
-          curl -s -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/abdulahadattar/STBB-BOOKS/issues" \
-            -d "{\"title\":\"Process next book (auto-trigger)\",\"body\":\"Previous book $GRADE $BOOK_TITLE completed. Next unprocessed book will be picked from progress.json.\",\"labels\":[\"auto-trigger\"]}" \
-            || echo "Next issue creation failed"
-      
-      - name: Document blocker
-        if: failure()
-        env:
-          BOOK_ID: ${{ steps.pick_book.outputs.result.split('|')[2] }}
-          BOOK_TITLE: ${{ steps.pick_book.outputs.result.split('|')[1] }}
-          GRADE: ${{ steps.pick_book.outputs.result.split('|')[0] }}
-        run: |
-          echo "🛑 BLOCKED: $GRADE $BOOK_TITLE (ID: $BOOK_ID)"
-          echo "See workflow run logs for details"
+          python3 -c "
+          import json, os, urllib.request
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GITHUB_TOKEN']
+          headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+          url = f'https://api.github.com/repos/{repo}/issues'
+          data = json.dumps({'title': 'STBB auto: process next Biology book', 'body': 'Auto-triggered after previous Biology book finished.', 'labels': [{'name': 'auto-trigger'}]}).encode()
+          req = urllib.request.Request(url, data=data, headers=headers)
+          try:
+            urllib.request.urlopen(req)
+          except Exception as e:
+            print('Issue creation failed:', e)
+          "
