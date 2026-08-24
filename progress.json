@@ -83,5 +83,15 @@
       "avoid": "Do not upload full Biology XII as single PDF",
       "use_instead": "Split into chapter-sized PDFs under 100MB"
     }
+  ],
+  "cleanup_candidates": [
+    "Grade 9/Biology\\Chapter 01 - Unit 1.pdf",
+    "Grade 9/Biology\\Chapter 02 - Unit 2.pdf",
+    "Grade 9/Biology\\Chapter 03 - Unit 3.pdf",
+    "Grade 9/Biology\\Chapter 04 - Unit 4.pdf",
+    "Grade 9/Biology\\Chapter 05 - Unit 5.pdf",
+    "Grade 9/Biology\\Chapter 07 - Unit 7.pdf",
+    "Grade 9/Biology\\Chapter 08 - Unit 8.pdf",
+    "Grade 9/Biology\\Chapter 09 - Unit 9.pdf"
   ]
 }
