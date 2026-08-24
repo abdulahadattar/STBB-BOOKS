@@ -62,7 +62,8 @@
     "226",
     "180",
     "195",
-    "Grade 10 Biology repair: removed 9 corrupt chapters + superseded Full Book; re-split raw (id 188) via outline bookmarks into 9 verified image-only chapter PDFs"
+    "Grade 10 Biology repair: removed 9 corrupt chapters + superseded Full Book; re-split raw (id 188) via outline bookmarks into 9 verified image-only chapter PDFs",
+    "Grade 1-2 rebuild: removed 34 corrupt PDFs; re-downloaded 6 raws (ids 139,39,40,104,86,140) and split into 34 verified image-only chapter PDFs with real unit titles"
   ],
   "failed": [
     {
