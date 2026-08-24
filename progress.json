@@ -52,6 +52,12 @@
       "title": "Math IX",
       "class": "Grade 9",
       "error": "blocked:split: no Chapter/Unit markers; only Weightage=X% pages without titles"
+    },
+    {
+      "id": "113",
+      "title": "General Knowledge III",
+      "class": "Grade 3",
+      "error": "HTTP Error 404: Not Found"
     }
   ],
   "blocked": [
