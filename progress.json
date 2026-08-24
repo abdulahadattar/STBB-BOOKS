@@ -53,5 +53,17 @@
       "class": "Grade 9",
       "error": "blocked:split: no Chapter/Unit markers; only Weightage=X% pages without titles"
     }
+  ],
+  "blocked": [
+    {
+      "id": "219",
+      "title": "Biology XI",
+      "class": "Grade 11",
+      "issue": null,
+      "blocker": "blocked:portal",
+      "detail": "pymupdf reports format error: non-page object in page tree while reading first pages",
+      "avoid": "Do not reuse current raw PDF in this state",
+      "use_instead": "Re-download or inspect file structure"
+    }
   ]
 }
