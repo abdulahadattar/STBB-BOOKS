@@ -84,16 +84,23 @@ def detect_chapters(pdf_path):
                 break
         chapters.append({"num": idx + 1, "page": p, "end": end, "title": title})
     chapters = [c for c in chapters if (c["end"] - c["page"] + 1) >= 2]
-    for i, ch in enumerate(chapters):
+    # Merge consecutive chapters with identical detected titles to avoid 3-page duplicates
+    merged = []
+    for c in chapters:
+        if merged and merged[-1]["title"] == c["title"]:
+            merged[-1]["end"] = c["end"]
+        else:
+            merged.append(c)
+    for i, ch in enumerate(merged):
         ch["num"] = i + 1
-    return chapters
+    return merged
 
 
 def flatten_pdf(input_pdf, output_pdf, start_page, end_page):
     temp_dir = output_pdf + "_temp"
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
-    os.makedirs(temp_dir)
+    os.makedirs(temp_dir, exist_ok=True)
     try:
         images = []
         with pymupdf.open(input_pdf) as doc:
@@ -101,6 +108,7 @@ def flatten_pdf(input_pdf, output_pdf, start_page, end_page):
                 page = doc.load_page(i)
                 pix = page.get_pixmap(matrix=pymupdf.Matrix(1.5, 1.5), alpha=False)
                 img_path = os.path.join(temp_dir, f"page_{i+1:04d}.jpg")
+                os.makedirs(os.path.dirname(img_path), exist_ok=True)
                 pix.save(img_path, output="jpeg", jpg_quality=80)
                 images.append(img_path)
         if not images:
@@ -111,7 +119,7 @@ def flatten_pdf(input_pdf, output_pdf, start_page, end_page):
         return os.path.exists(output_pdf) and os.path.getsize(output_pdf) > 10000
     finally:
         if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def process_book(book_id, title, class_name, subject):
@@ -138,6 +146,25 @@ def process_book(book_id, title, class_name, subject):
             return True
         success = flatten_pdf(raw_path, filepath, 1, pymupdf.open(raw_path).page_count)
         print(f"  Flattened full book: {success}")
+        if success and os.path.getsize(filepath) > 95 * 1024 * 1024:
+            print(f"  Splitting oversized full book: {filename}")
+            # Remove oversized file after split
+            os.remove(filepath)
+            chunk = 50
+            with pymupdf.open(raw_path) as doc:
+                total = doc.page_count
+            parts = 0
+            for start in range(1, total + 1, chunk):
+                end = min(start + chunk - 1, total)
+                part_path = os.path.join(output_dir, f"{sanitize(subject)} - Part {len(parts)}.pdf")
+                if os.path.exists(part_path) and os.path.getsize(part_path) > 10000:
+                    parts += 1
+                    continue
+                part_success = flatten_pdf(raw_path, part_path, start, end)
+                if part_success:
+                    parts += 1
+                    print(f"    Created part {parts}: {part_path}")
+            return parts > 0
         return success
     created = []
     for ch in chapters:
