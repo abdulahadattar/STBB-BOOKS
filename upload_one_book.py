@@ -8,8 +8,12 @@ import json
 import glob
 import shutil
 import urllib.request
-import subprocess
 import pymupdf
+
+try:
+    from jpegs_to_pdf import jpegs_to_pdf
+except Exception:
+    jpegs_to_pdf = None
 
 REPO = os.path.dirname(os.path.abspath(__file__))
 BASE_URL = "https://portal.stbb.edu.pk"
@@ -101,9 +105,10 @@ def flatten_pdf(input_pdf, output_pdf, start_page, end_page):
                 images.append(img_path)
         if not images:
             return False
-        cmd = [sys.executable, os.path.join(REPO, "jpegs_to_pdf.py"), output_pdf] + images
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        return result.returncode == 0
+        if jpegs_to_pdf is None:
+            raise RuntimeError("jpegs_to_pdf is not available")
+        jpegs_to_pdf(images, output_pdf)
+        return os.path.exists(output_pdf) and os.path.getsize(output_pdf) > 10000
     finally:
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
