@@ -64,6 +64,15 @@
       "detail": "pymupdf reports format error: non-page object in page tree while reading first pages",
       "avoid": "Do not reuse current raw PDF in this state",
       "use_instead": "Re-download or inspect file structure"
+    },
+    {
+      "id": "228",
+      "title": "Biology XII",
+      "class": "Grade 12",
+      "blocker": "blocked:split",
+      "detail": "Full book PDF is 320MB, exceeds GitHub 100MB file limit and chapter detection failed",
+      "avoid": "Do not upload full Biology XII as single PDF",
+      "use_instead": "Split into chapter-sized PDFs under 100MB"
     }
   ]
 }
