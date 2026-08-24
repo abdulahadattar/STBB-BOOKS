@@ -51,7 +51,8 @@
     "Grade 7 Mathematics re-split units",
     "Grade 7 English re-split units",
     "Grade 7 Science re-split chapters",
-    "Grade 7 Social Studies re-split units"
+    "Grade 7 Social Studies re-split units",
+    "219"
   ],
   "failed": [
     {
@@ -79,18 +80,7 @@
       "error": "HTTP Error 404: Not Found"
     }
   ],
-  "blocked": [
-    {
-      "id": "219",
-      "title": "Biology XI",
-      "class": "Grade 11",
-      "issue": null,
-      "blocker": "blocked:portal",
-      "detail": "pymupdf reports format error: non-page object in page tree while reading first pages",
-      "avoid": "Do not reuse current raw PDF in this state",
-      "use_instead": "Re-download or inspect file structure"
-    }
-  ],
+  "blocked": [],
   "cleanup_candidates": [
     "Grade 9/Biology\\Chapter 01 - Unit 1.pdf",
     "Grade 9/Biology\\Chapter 02 - Unit 2.pdf",
