@@ -1,0 +1,421 @@
+{
+  "timestamp": "2026-08-25 01:45:37",
+  "grades": {
+    "Grade 1": {
+      "subjects": {
+        "English": {
+          "files": 6,
+          "chapters": 6,
+          "issues": []
+        },
+        "General Knowledge": {
+          "files": 6,
+          "chapters": 6,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 8,
+          "chapters": 8,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    },
+    "Grade 10": {
+      "subjects": {
+        "Biology": {
+          "files": 9,
+          "chapters": 9,
+          "issues": []
+        },
+        "Chemistry": {
+          "files": 8,
+          "chapters": 0,
+          "issues": []
+        },
+        "Computer Science": {
+          "files": 7,
+          "chapters": 0,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 14,
+          "chapters": 0,
+          "issues": []
+        },
+        "Pakistan Studies": {
+          "files": 13,
+          "chapters": 0,
+          "issues": []
+        },
+        "Physics": {
+          "files": 11,
+          "chapters": 0,
+          "issues": []
+        },
+        "Secondary Stage English": {
+          "files": 8,
+          "chapters": 0,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": [
+        "Grade 10/Chemistry: ['Unit 01 - Chemical Equilibrium.pdf', 'Unit 02 - Acid, Base and Salt.pdf', 'Unit 03 - Organic Chemistry.pdf', 'Unit 04 - Biochemistry.pdf', 'Unit 05 - Environmental Chemistry I - The Atmosphere.pdf', 'Unit 06 - Environmental Chemistry II - Water.pdf', 'Unit 07 - Analytical Chemistry.pdf', 'Unit 08 - Industrial Chemistry.pdf']",
+        "Grade 10/Computer Science: ['Unit 01 - Problem Solving and Algorithm Designing.pdf', 'Unit 02 - Basics of Programming in C++.pdf', 'Unit 03 - Input Output Handling in C++.pdf', 'Unit 04 - Control Structure.pdf', 'Unit 05 - Functions.pdf', 'Unit 06 - Digital Logic and Design.pdf', 'Unit 07 - Introduction to Scratch.pdf']",
+        "Grade 10/Mathematics: ['Unit 01 - Sets and Functions.pdf', 'Unit 02 - Variations.pdf', 'Unit 03 - Matrices and Determinants.pdf', 'Unit 04 - Theory of Quadratic Equations.pdf', 'Unit 05 - Partial Fractions.pdf', 'Unit 06 - Basic Statistics.pdf', 'Unit 07 - Pythagoras Theorem.pdf', 'Unit 08 - Ratio and Proportion.pdf', 'Unit 09 - Chords of a Circle.pdf', 'Unit 10 - Tangents of a Circle.pdf', 'Unit 11 - Chords and Arcs.pdf', 'Unit 12 - Angles in a Segment of a Circle.pdf', 'Unit 13 - Practical Geometry - Circles.pdf', 'Unit 14 - Introduction to Trigonometry.pdf']",
+        "Grade 10/Pakistan Studies: ['Unit 01 - Ideological Basis of Pakistan.pdf', 'Unit 02 - Making of Pakistan.pdf', 'Unit 03 - Constitutional Development in Islamic Republic of Pakistan.pdf', 'Unit 04 - Land and Climate of Pakistan.pdf', 'Unit 05 - Resources of Pakistan.pdf', 'Unit 06 - Industrial Development in Pakistan.pdf', 'Unit 07 - The Population of Pakistan.pdf', 'Unit 08 - Culture of Pakistan.pdf', 'Unit 09 - Education in Pakistan.pdf', 'Unit 10 - Pakistan - A Welfare State.pdf', 'Unit 11 - The Civic Life in Pakistan.pdf', 'Unit 12 - Protection of Human Rights.pdf', 'Unit 13 - Protection of Citizens Rights and the Role of Institutions.pdf']",
+        "Grade 10/Physics: ['Unit 10 - General Waves Properties.pdf', 'Unit 11 - Sound.pdf', 'Unit 12 - Electromagnetic Spectrum.pdf', 'Unit 13 - Geometrical Optics.pdf', 'Unit 14 - Electrostatics.pdf', 'Unit 15 - Current Electricity.pdf', 'Unit 16 - Electromagnetism.pdf', 'Unit 17 - Introductory Electronics.pdf', 'Unit 18 - Information and Communication Technology.pdf', 'Unit 19 - Atomic Structure.pdf', 'Unit 20 - Nuclear Structure and Nuclear Power Plant K-2.pdf']",
+        "Grade 10/Secondary Stage English: ['Unit 01 - Contributions of Notable Leaders.pdf', 'Unit 02 - Labour and Peoples Rights.pdf', 'Unit 03 - Practicing Positive Work Ethics.pdf', 'Unit 04 - Media for Information and Reflection.pdf', 'Unit 05 - Respecting Self and Others.pdf', 'Unit 06 - Character Building.pdf', 'Unit 07 - Praising Nature.pdf', 'Unit 08 - Civic Sense and Civic Activities.pdf']"
+      ]
+    },
+    "Grade 11": {
+      "subjects": {
+        "Biology": {
+          "files": 14,
+          "chapters": 14,
+          "issues": []
+        },
+        "Chemistry": {
+          "files": 12,
+          "chapters": 12,
+          "issues": []
+        },
+        "English": {
+          "files": 10,
+          "chapters": 10,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 12,
+          "chapters": 12,
+          "issues": []
+        },
+        "Physics": {
+          "files": 14,
+          "chapters": 14,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    },
+    "Grade 12": {
+      "subjects": {
+        "Biology": {
+          "files": 13,
+          "chapters": 13,
+          "issues": []
+        },
+        "Chemistry": {
+          "files": 13,
+          "chapters": 13,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 14,
+          "chapters": 14,
+          "issues": []
+        },
+        "Physics": {
+          "files": 14,
+          "chapters": 14,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    },
+    "Grade 2": {
+      "subjects": {
+        "English": {
+          "files": 7,
+          "chapters": 7,
+          "issues": []
+        },
+        "General Knowledge": {
+          "files": 4,
+          "chapters": 4,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 9,
+          "chapters": 9,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    },
+    "Grade 3": {
+      "subjects": {
+        "Islamiyat III": {
+          "files": 3,
+          "chapters": 3,
+          "issues": []
+        },
+        "Mathematics III": {
+          "files": 7,
+          "chapters": 7,
+          "issues": []
+        },
+        "My English III": {
+          "files": 6,
+          "chapters": 6,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    },
+    "Grade 4": {
+      "subjects": {
+        "Islamiyat IV": {
+          "files": 5,
+          "chapters": 5,
+          "issues": []
+        },
+        "Mathematics IV": {
+          "files": 7,
+          "chapters": 7,
+          "issues": []
+        },
+        "My English IV": {
+          "files": 5,
+          "chapters": 5,
+          "issues": []
+        },
+        "Social Studies IV": {
+          "files": 4,
+          "chapters": 4,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    },
+    "Grade 5": {
+      "subjects": {
+        "Islamiyat V": {
+          "files": 5,
+          "chapters": 5,
+          "issues": []
+        },
+        "Mathematics V": {
+          "files": 9,
+          "chapters": 9,
+          "issues": []
+        },
+        "My English V": {
+          "files": 5,
+          "chapters": 5,
+          "issues": []
+        },
+        "Science V": {
+          "files": 10,
+          "chapters": 10,
+          "issues": []
+        },
+        "Social Studies V": {
+          "files": 13,
+          "chapters": 13,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    },
+    "Grade 6": {
+      "subjects": {
+        "Arabic": {
+          "files": 11,
+          "chapters": 11,
+          "issues": []
+        },
+        "Computer Science": {
+          "files": 6,
+          "chapters": 6,
+          "issues": []
+        },
+        "English": {
+          "files": 6,
+          "chapters": 6,
+          "issues": []
+        },
+        "Islamiyat": {
+          "files": 5,
+          "chapters": 5,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 15,
+          "chapters": 15,
+          "issues": []
+        },
+        "Social Studies": {
+          "files": 10,
+          "chapters": 10,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    },
+    "Grade 7": {
+      "subjects": {
+        "Computer Education": {
+          "files": 6,
+          "chapters": 0,
+          "issues": []
+        },
+        "English": {
+          "files": 7,
+          "chapters": 0,
+          "issues": []
+        },
+        "Islamiyat": {
+          "files": 5,
+          "chapters": 5,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 15,
+          "chapters": 0,
+          "issues": []
+        },
+        "Science": {
+          "files": 12,
+          "chapters": 12,
+          "issues": []
+        },
+        "Social Studies": {
+          "files": 7,
+          "chapters": 0,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": [
+        "Grade 7/Computer Education: ['Unit 1 - ICT Fundamentals.pdf', 'Unit 2 - Digital Skills.pdf', 'Unit 3 - Algorithmic Thinking and Problem Solving.pdf', 'Unit 4 - Programming.pdf', 'Unit 5 - Digital Citizenship.pdf', 'Unit 6 - Entrepreneurship.pdf']",
+        "Grade 7/English: ['Unit 1 - Effects of Our Actions on the Environment.pdf', 'Unit 2 - Social Etiquettes and Manners.pdf', 'Unit 3 - Awareness of Crisis Accidents and Natural Calamities.pdf', 'Unit 4 - Awareness of and Empathy with Special People.pdf', 'Unit 5 - Historical and Cultural Places of Pakistan.pdf', 'Unit 6 - Media as a Source of Knowledge.pdf', 'Unit 7 - Learning Organized Approach through Identifying.pdf']",
+        "Grade 7/Mathematics: ['Unit 1 - Sets.pdf', 'Unit 10 - Fundamentals of Geometry.pdf', 'Unit 11 - Practical Geometry.pdf', 'Unit 12 - Circumference Area and Volume.pdf', 'Unit 13 - Information Handling.pdf', 'Unit 14 - Glossary.pdf', 'Unit 15 - Answers.pdf', 'Unit 2 - Rational Numbers.pdf', 'Unit 3 - Decimals.pdf', 'Unit 4 - Exponents.pdf', 'Unit 5 - Square Root of Positive Numbers.pdf', 'Unit 6 - Direct and Inverse Variation.pdf', 'Unit 7 - Financial Arithmetic.pdf', 'Unit 8 - Algebraic Expressions.pdf', 'Unit 9 - Linear Equations.pdf']",
+        "Grade 7/Social Studies: ['Unit 1.pdf', 'Unit 2.pdf', 'Unit 3A.pdf', 'Unit 3B.pdf', 'Unit 4.pdf', 'Unit 5.pdf', 'Unit 6.pdf']"
+      ]
+    },
+    "Grade 8": {
+      "subjects": {
+        "Computer Education": {
+          "files": 6,
+          "chapters": 0,
+          "issues": []
+        },
+        "Islmaiyat": {
+          "files": 6,
+          "chapters": 6,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 12,
+          "chapters": 0,
+          "issues": []
+        },
+        "My English": {
+          "files": 7,
+          "chapters": 0,
+          "issues": []
+        },
+        "Science": {
+          "files": 12,
+          "chapters": 12,
+          "issues": []
+        },
+        "Social Studies": {
+          "files": 9,
+          "chapters": 9,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": [
+        "Grade 8/Computer Education: ['Unit 01 - ICT Fundamental.pdf', 'Unit 02 - Digital Skills.pdf', 'Unit 03 - Algorithmic Thinking and Problem Solving.pdf', 'Unit 04 - Programming.pdf', 'Unit 05 - Digital Citizenship.pdf', 'Unit 06 - Entrepreneurship.pdf']",
+        "Grade 8/Mathematics: ['Unit 01 - Operations on Sets.pdf', 'Unit 02 - Real Numbers.pdf', 'Unit 03 - Number Systems.pdf', 'Unit 04 - Financial Arithmetic.pdf', 'Unit 05 - Polynomials.pdf', 'Unit 06 - Factorization and Simultaneous Equations.pdf', 'Unit 07 - Fundamentals of Geometry.pdf', 'Unit 08 - Practical Geometry.pdf', 'Unit 09 - Areas and Volumes.pdf', 'Unit 10 - Demonstrative Geometry.pdf', 'Unit 11 - Trigonometry.pdf', 'Unit 12 - Information Handling.pdf']",
+        "Grade 8/My English: ['Unit 01 - Friendship and Cooperation.pdf', 'Unit 02 - Natural Beauty of Pakistan.pdf', 'Unit 03 - Traffic Education.pdf', 'Unit 04 - Exploring Educational Opportunities.pdf', 'Unit 05 - Humanism.pdf', 'Unit 06 - Sportsmanship.pdf', 'Unit 07 - The Multiple Roles That Women Play.pdf']"
+      ]
+    },
+    "Grade 9": {
+      "subjects": {
+        "Biology": {
+          "files": 9,
+          "chapters": 9,
+          "issues": []
+        },
+        "Chemistry": {
+          "files": 8,
+          "chapters": 8,
+          "issues": []
+        },
+        "English": {
+          "files": 1,
+          "chapters": 1,
+          "issues": []
+        },
+        "Mathematics": {
+          "files": 15,
+          "chapters": 15,
+          "issues": []
+        },
+        "Physics": {
+          "files": 9,
+          "chapters": 9,
+          "issues": []
+        }
+      },
+      "corrupt": [],
+      "text_layer": [],
+      "missing_chapters": [],
+      "boundary_issues": [],
+      "naming_issues": []
+    }
+  },
+  "summary": {
+    "corrupt": 0,
+    "text_layer": 0,
+    "missing_chapters": 0,
+    "boundary_issues": 0,
+    "naming_issues": 13
+  }
+}
