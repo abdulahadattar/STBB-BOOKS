@@ -1,139 +1,142 @@
 {
-  "processed": [
-    "202",
-    "139",
-    "39",
-    "40",
-    "104",
-    "86",
-    "140",
-    "256",
-    "85",
-    "141",
-    "258",
-    "87",
-    "142",
-    "84",
-    "124",
-    "259",
-    "95",
-    "144",
-    "83",
-    "80",
-    "46",
-    "287",
-    "260",
-    "188",
-    "198",
-    "117",
-    "121",
-    "204",
-    "235",
-    "247",
-    "267",
-    "205",
-    "201",
-    "203",
-    "147",
-    "174",
-    "228",
-    "206",
-    "218",
-    "225",
-    "207",
-    "221",
-    "215",
-    "143",
-    "96",
-    "81",
-    "Grade 7 Arabic (full book flatten)",
-    "Grade 7 Computer Education re-split units",
-    "Grade 7 Mathematics re-split units",
-    "Grade 7 English re-split units",
-    "Grade 7 Science re-split chapters",
-    "Grade 7 Social Studies re-split units",
-    "219",
-    "Grade 10 audit+repair: removed 35 corrupt non-Biology PDFs; re-split 6 subjects into 61 verified image-only chapter PDFs with real unit titles",
-    "322",
-    "262",
-    "283",
-    "146",
-    "123",
-    "226",
-    "180",
-    "195",
-    "Grade 10 Biology repair: removed 9 corrupt chapters + superseded Full Book; re-split raw (id 188) via outline bookmarks into 9 verified image-only chapter PDFs",
-    "Grade 1-2 rebuild: removed 34 corrupt PDFs; re-downloaded 6 raws (ids 139,39,40,104,86,140) and split into 34 verified image-only chapter PDFs with real unit titles"
-  ],
-  "failed": [
-    {
-      "id": "113",
-      "title": "General Knowledge III",
-      "class": "Grade 3",
-      "error": "HTTP Error 404: Not Found"
-    },
-    {
-      "id": "113",
-      "title": "General Knowledge III",
-      "class": "Grade 3",
-      "error": "HTTP Error 404: Not Found"
-    }
-  ],
-  "blocked": [],
-  "cleanup_candidates": [
-    "Grade 9/Biology\\Chapter 01 - Unit 1.pdf",
-    "Grade 9/Biology\\Chapter 02 - Unit 2.pdf",
-    "Grade 9/Biology\\Chapter 03 - Unit 3.pdf",
-    "Grade 9/Biology\\Chapter 04 - Unit 4.pdf",
-    "Grade 9/Biology\\Chapter 05 - Unit 5.pdf",
-    "Grade 9/Biology\\Chapter 07 - Unit 7.pdf",
-    "Grade 9/Biology\\Chapter 08 - Unit 8.pdf",
-    "Grade 9/Biology\\Chapter 09 - Unit 9.pdf"
-  ],
-  "grade12_improvements": {
-    "date": "2026-08-24",
-    "audit": "All 15 remote Grade 12 PDFs verified healthy (open, >0 pages, image-only). No corrupt files found.",
-    "actions": [
-      {
-        "subject": "Biology XII",
-        "id": "228",
-        "result": "Split into 13 real chapters (15-27) using OCR'd contents page ranges (offset +5); removed 9 Part files",
-        "commits": [
-          "9403d25",
-          "3b65687"
-        ]
-      },
-      {
-        "subject": "Physics XII",
-        "id": "215",
-        "result": "Raw re-downloaded (306p); 14 units (15-28) with real titles split via body Unit headers; removed 4 junk-named mis-split files",
-        "commits": [
-          "afd9f58",
-          "b09c203"
-        ]
-      },
-      {
-        "subject": "Chemistry XII",
-        "id": "218",
-        "result": "Raw re-downloaded (298p, outline had 13 chapter starts); titles from OCR'd contents; split into chapters 1-13",
-        "commits": [
-          "8def45c",
-          "228b618"
-        ]
-      },
-      {
-        "subject": "Mathematics XII",
-        "id": "235",
-        "result": "Raw re-downloaded (192p); split into 14 unit chapters (17-30) using contents page ranges verified against unit title pages",
-        "commit": "10e993b"
-      },
-      {
-        "subject": "English XII",
-        "id": "205",
-        "result": "Remote full book was actually a mislabeled Math book (id 205 serves Math content); full-book files removed after Mathematics was properly split from correct raw id 235",
-        "commit": "ac4731d"
-      }
-    ],
-    "note": "English XII true chapter split pending a correct English XII raw download (portal id 205 returns Math book content)"
+ "processed": [
+  "202",
+  "139",
+  "39",
+  "40",
+  "104",
+  "86",
+  "140",
+  "256",
+  "85",
+  "141",
+  "258",
+  "87",
+  "142",
+  "84",
+  "124",
+  "259",
+  "95",
+  "144",
+  "83",
+  "80",
+  "46",
+  "287",
+  "260",
+  "188",
+  "198",
+  "117",
+  "121",
+  "204",
+  "235",
+  "247",
+  "267",
+  "205",
+  "201",
+  "203",
+  "147",
+  "174",
+  "228",
+  "206",
+  "218",
+  "225",
+  "207",
+  "221",
+  "215",
+  "143",
+  "96",
+  "81",
+  "Grade 7 Arabic (full book flatten)",
+  "Grade 7 Computer Education re-split units",
+  "Grade 7 Mathematics re-split units",
+  "Grade 7 English re-split units",
+  "Grade 7 Science re-split chapters",
+  "Grade 7 Social Studies re-split units",
+  "219",
+  "Grade 10 audit+repair: removed 35 corrupt non-Biology PDFs; re-split 6 subjects into 61 verified image-only chapter PDFs with real unit titles",
+  "322",
+  "262",
+  "283",
+  "146",
+  "123",
+  "226",
+  "180",
+  "195",
+  "Grade 10 Biology repair: removed 9 corrupt chapters + superseded Full Book; re-split raw (id 188) via outline bookmarks into 9 verified image-only chapter PDFs",
+  "Grade 1-2 rebuild: removed 34 corrupt PDFs; re-downloaded 6 raws (ids 139,39,40,104,86,140) and split into 34 verified image-only chapter PDFs with real unit titles",
+  "Grade 3 Islamiyat/Math/My English re-split chapters (13 files, flattened, verified)",
+  "Grade 4 Islamiyat/Math/My English/Social Studies re-split chapters (21 files) + Science IV full book (no reliable boundaries)",
+  "Grade 5 Islamiyat/Math/My English/Science/Social Studies re-split chapters (46 files, flattened, verified)"
+ ],
+ "failed": [
+  {
+   "id": "113",
+   "title": "General Knowledge III",
+   "class": "Grade 3",
+   "error": "HTTP Error 404: Not Found"
+  },
+  {
+   "id": "113",
+   "title": "General Knowledge III",
+   "class": "Grade 3",
+   "error": "HTTP Error 404: Not Found"
   }
+ ],
+ "blocked": [],
+ "cleanup_candidates": [
+  "Grade 9/Biology\\Chapter 01 - Unit 1.pdf",
+  "Grade 9/Biology\\Chapter 02 - Unit 2.pdf",
+  "Grade 9/Biology\\Chapter 03 - Unit 3.pdf",
+  "Grade 9/Biology\\Chapter 04 - Unit 4.pdf",
+  "Grade 9/Biology\\Chapter 05 - Unit 5.pdf",
+  "Grade 9/Biology\\Chapter 07 - Unit 7.pdf",
+  "Grade 9/Biology\\Chapter 08 - Unit 8.pdf",
+  "Grade 9/Biology\\Chapter 09 - Unit 9.pdf"
+ ],
+ "grade12_improvements": {
+  "date": "2026-08-24",
+  "audit": "All 15 remote Grade 12 PDFs verified healthy (open, >0 pages, image-only). No corrupt files found.",
+  "actions": [
+   {
+    "subject": "Biology XII",
+    "id": "228",
+    "result": "Split into 13 real chapters (15-27) using OCR'd contents page ranges (offset +5); removed 9 Part files",
+    "commits": [
+     "9403d25",
+     "3b65687"
+    ]
+   },
+   {
+    "subject": "Physics XII",
+    "id": "215",
+    "result": "Raw re-downloaded (306p); 14 units (15-28) with real titles split via body Unit headers; removed 4 junk-named mis-split files",
+    "commits": [
+     "afd9f58",
+     "b09c203"
+    ]
+   },
+   {
+    "subject": "Chemistry XII",
+    "id": "218",
+    "result": "Raw re-downloaded (298p, outline had 13 chapter starts); titles from OCR'd contents; split into chapters 1-13",
+    "commits": [
+     "8def45c",
+     "228b618"
+    ]
+   },
+   {
+    "subject": "Mathematics XII",
+    "id": "235",
+    "result": "Raw re-downloaded (192p); split into 14 unit chapters (17-30) using contents page ranges verified against unit title pages",
+    "commit": "10e993b"
+   },
+   {
+    "subject": "English XII",
+    "id": "205",
+    "result": "Remote full book was actually a mislabeled Math book (id 205 serves Math content); full-book files removed after Mathematics was properly split from correct raw id 235",
+    "commit": "ac4731d"
+   }
+  ],
+  "note": "English XII true chapter split pending a correct English XII raw download (portal id 205 returns Math book content)"
+ }
 }
